@@ -1,6 +1,5 @@
 framework:
     cache:
-        prefix_seed: lm_back
-        app: cache.adapter.redis
-        system: cache.adapter.redis
-        default_redis_provider: "%env(REDIS_URL)%"
+        prefix_seed: safe_score
+        app: cache.adapter.filesystem
+        system: cache.adapter.system

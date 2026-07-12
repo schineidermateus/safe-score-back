@@ -1,11 +1,8 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
-
-        # IMPORTANT: You MUST configure your server version,
-        # either here or in the DATABASE_URL env var (see .env file)
-        #server_version: '16'
-
+        server_version: '%env(DATABASE_SERVER_VERSION)%'
+        charset: utf8mb4
         profiling_collect_backtrace: '%kernel.debug%'
         use_savepoints: true
     orm:
@@ -14,23 +11,20 @@ doctrine:
         report_fields_where_declared: true
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-        identity_generation_preferences:
-            Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
-        auto_mapping: true
+        auto_mapping: false
         mappings:
-            App:
+            SafeScore:
                 type: attribute
                 is_bundle: false
-                dir: '%kernel.project_dir%/src/Domain'
+                dir: '%kernel.project_dir%/src'
                 prefix: 'App'
-                alias: App
+                alias: SafeScore
         controller_resolver:
             auto_mapping: false
 
 when@test:
     doctrine:
         dbal:
-            # "TEST_TOKEN" is typically set by ParaTest
             dbname_suffix: '_test%env(default::TEST_TOKEN)%'
 
 when@prod:

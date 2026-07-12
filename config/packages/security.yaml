@@ -1,46 +1,39 @@
 security:
-    password_hashers:
-        App\Domain\Usuario\Entity\Usuario:
-            algorithm: auto
     providers:
-        usuario_provider:
-            entity:
-                class: App\Domain\Entity\Usuario
-                property: email
+        safe_score_users:
+            id: App\Identity\Infrastructure\Security\UserProvider
+
+    role_hierarchy:
+        ROLE_ORGANIZATION_ADMIN:
+            - ROLE_ORGANIZATION_MANAGER
+            - ROLE_ORGANIZATION_ANALYST
+            - ROLE_ORGANIZATION_VIEWER
+        ROLE_ORGANIZATION_MANAGER:
+            - ROLE_ORGANIZATION_ANALYST
+            - ROLE_ORGANIZATION_VIEWER
+        ROLE_ORGANIZATION_ANALYST:
+            - ROLE_ORGANIZATION_VIEWER
+
     firewalls:
-        # Rotas de DEV
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-        # Rotas públicas: registro, login, health, assets
-        public:
-            pattern: ^/public
+        api:
+            pattern: ^/api
             stateless: true
             lazy: true
-
-        # Rotas privadas
-        user:
-            pattern: ^/
-            stateless: true
-            lazy: true
-            provider: usuario_provider
-            custom_authenticators:
-                - App\Infrastructure\Security\JwtAuthenticator
+            provider: safe_score_users
+            entry_point: App\Identity\Infrastructure\Security\ApiAuthenticationEntryPoint
 
     access_control:
         - { path: ^/(_(profiler|wdt)), roles: PUBLIC_ACCESS }
-        - { path: ^/public, roles: PUBLIC_ACCESS }
-        - { path: ^/, roles: ROLE_USER }
+        - { path: ^/health$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1/auth, roles: PUBLIC_ACCESS }
+        - { path: ^/api/v1, roles: ROLE_USER }
 
 when@test:
     security:
-        password_hashers:
-            # By default, password hashers are resource intensive and take time. This is
-            # important to generate secure password hashes. In tests however, secure hashes
-            # are not important, waste resources and increase test times. The following
-            # reduces the work factor to the lowest possible values.
-            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
-                algorithm: auto
-                cost: 4 # Lowest possible value for bcrypt
-                time_cost: 3 # Lowest possible value for argon
-                memory_cost: 10 # Lowest possible value for argon
+        firewalls:
+            api:
+                security: false
