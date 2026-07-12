@@ -1,0 +1,46 @@
+security:
+    password_hashers:
+        App\Domain\Usuario\Entity\Usuario:
+            algorithm: auto
+    providers:
+        usuario_provider:
+            entity:
+                class: App\Domain\Entity\Usuario
+                property: email
+    firewalls:
+        # Rotas de DEV
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        # Rotas públicas: registro, login, health, assets
+        public:
+            pattern: ^/public
+            stateless: true
+            lazy: true
+
+        # Rotas privadas
+        user:
+            pattern: ^/
+            stateless: true
+            lazy: true
+            provider: usuario_provider
+            custom_authenticators:
+                - App\Infrastructure\Security\JwtAuthenticator
+
+    access_control:
+        - { path: ^/(_(profiler|wdt)), roles: PUBLIC_ACCESS }
+        - { path: ^/public, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: ROLE_USER }
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon
