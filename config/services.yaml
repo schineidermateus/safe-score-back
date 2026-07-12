@@ -12,3 +12,6 @@ services:
 
     App\Organizations\Application\Context\OrganizationContextInterface:
         alias: App\Organizations\Application\Context\OrganizationContext
+
+    App\Customers\Domain\Repository\CustomerRepository:
+        alias: App\Customers\Infrastructure\Persistence\Doctrine\DoctrineCustomerRepository

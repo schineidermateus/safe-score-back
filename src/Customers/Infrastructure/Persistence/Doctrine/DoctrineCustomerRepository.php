@@ -1,0 +1,148 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Customers\Infrastructure\Persistence\Doctrine;
+
+use App\Customers\Domain\Entity\Customer;
+use App\Customers\Domain\Enum\CustomerStatus;
+use App\Customers\Domain\Repository\CustomerRepository;
+use App\Organizations\Domain\ValueObject\OrganizationId;
+use App\Shared\Domain\Exception\DomainException;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<Customer>
+ */
+final class DoctrineCustomerRepository extends ServiceEntityRepository implements CustomerRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Customer::class);
+    }
+
+    public function save(Customer $customer): void
+    {
+        $entityManager = $this->getEntityManager();
+        $entityManager->persist($customer);
+
+        try {
+            $entityManager->flush();
+        } catch (UniqueConstraintViolationException) {
+            throw new DomainException('CUSTOMER_DOCUMENT_ALREADY_EXISTS', 'Já existe um cliente com este documento.', 409, 'document');
+        }
+    }
+
+    public function findById(OrganizationId $organizationId, string $customerId): ?Customer
+    {
+        return $this->createQueryBuilder('customer')
+            ->andWhere('customer.organizationId = :organizationId')
+            ->andWhere('customer.id = :customerId')
+            ->andWhere('customer.deletedAt IS NULL')
+            ->setParameter('organizationId', (string) $organizationId)
+            ->setParameter('customerId', $customerId)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function documentExists(
+        OrganizationId $organizationId,
+        string $document,
+        ?string $exceptCustomerId = null,
+    ): bool {
+        $queryBuilder = $this->createQueryBuilder('customer')
+            ->select('COUNT(customer.id)')
+            ->andWhere('customer.organizationId = :organizationId')
+            ->andWhere('customer.document = :document')
+            ->setParameter('organizationId', (string) $organizationId)
+            ->setParameter('document', $document);
+
+        if (null !== $exceptCustomerId) {
+            $queryBuilder
+                ->andWhere('customer.id != :exceptCustomerId')
+                ->setParameter('exceptCustomerId', $exceptCustomerId);
+        }
+
+        return (int) $queryBuilder->getQuery()->getSingleScalarResult() > 0;
+    }
+
+    public function list(
+        OrganizationId $organizationId,
+        ?string $search,
+        ?CustomerStatus $status,
+        int $page,
+        int $perPage,
+        string $sort,
+    ): array {
+        $queryBuilder = $this->filteredQuery($organizationId, $search, $status);
+        [$field, $direction] = $this->sort($sort);
+
+        /** @var list<Customer> $customers */
+        $customers = $queryBuilder
+            ->orderBy('customer.'.$field, $direction)
+            ->setFirstResult(($page - 1) * $perPage)
+            ->setMaxResults($perPage)
+            ->getQuery()
+            ->getResult();
+
+        return $customers;
+    }
+
+    public function countMatching(
+        OrganizationId $organizationId,
+        ?string $search,
+        ?CustomerStatus $status,
+    ): int {
+        return (int) $this->filteredQuery($organizationId, $search, $status)
+            ->select('COUNT(customer.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    private function filteredQuery(
+        OrganizationId $organizationId,
+        ?string $search,
+        ?CustomerStatus $status,
+    ): QueryBuilder {
+        $queryBuilder = $this->createQueryBuilder('customer')
+            ->andWhere('customer.organizationId = :organizationId')
+            ->andWhere('customer.deletedAt IS NULL')
+            ->setParameter('organizationId', (string) $organizationId);
+
+        if (null !== $search && '' !== trim($search)) {
+            $queryBuilder
+                ->andWhere(
+                    'LOWER(customer.legalName) LIKE :search
+                    OR LOWER(customer.tradeName) LIKE :search
+                    OR customer.document LIKE :search
+                    OR LOWER(customer.externalId) LIKE :search',
+                )
+                ->setParameter('search', '%'.mb_strtolower(trim($search)).'%');
+        }
+
+        if (null !== $status) {
+            $queryBuilder
+                ->andWhere('customer.status = :status')
+                ->setParameter('status', $status);
+        }
+
+        return $queryBuilder;
+    }
+
+    /**
+     * @return array{string, 'ASC'|'DESC'}
+     */
+    private function sort(string $sort): array
+    {
+        return match ($sort) {
+            'legal_name' => ['legalName', 'ASC'],
+            '-legal_name' => ['legalName', 'DESC'],
+            'created_at' => ['createdAt', 'ASC'],
+            '-created_at' => ['createdAt', 'DESC'],
+            default => ['legalName', 'ASC'],
+        };
+    }
+}
