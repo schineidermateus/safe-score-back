@@ -22,7 +22,7 @@ final readonly class ApiExceptionSubscriber
         $exception = $event->getThrowable();
 
         if ($exception instanceof DomainException) {
-            $event->setResponse(ApiResponse::error([
+            $event->setResponse(ApiResponseFactory::error([
                 new ApiError(
                     $exception->errorCode(),
                     $exception->getMessage(),
@@ -35,7 +35,7 @@ final readonly class ApiExceptionSubscriber
 
         if ($exception instanceof HttpExceptionInterface) {
             $status = $exception->getStatusCode();
-            $event->setResponse(ApiResponse::error([
+            $event->setResponse(ApiResponseFactory::error([
                 new ApiError($this->httpErrorCode($status), $this->safeHttpMessage($status)),
             ], $status));
 
@@ -46,7 +46,7 @@ final readonly class ApiExceptionSubscriber
             'exception' => $exception,
         ]);
 
-        $event->setResponse(ApiResponse::error([
+        $event->setResponse(ApiResponseFactory::error([
             new ApiError('INTERNAL_ERROR', 'Ocorreu um erro interno.'),
         ], 500));
     }

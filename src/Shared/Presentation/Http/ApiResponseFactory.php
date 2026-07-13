@@ -6,7 +6,7 @@ namespace App\Shared\Presentation\Http;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-final class ApiResponse
+final class ApiResponseFactory
 {
     /**
      * @param array<string, mixed> $meta

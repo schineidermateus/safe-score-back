@@ -6,7 +6,7 @@ namespace App\Customers\Presentation\Http\Controller;
 
 use App\Customers\Application\DTO\ListCustomersInput;
 use App\Customers\Application\UseCase\ListCustomers;
-use App\Shared\Presentation\Http\ApiResponse;
+use App\Shared\Presentation\Http\ApiResponseFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
@@ -24,7 +24,7 @@ final readonly class ListCustomersController
     {
         $result = $this->listCustomers->execute($input);
 
-        return ApiResponse::success(
+        return ApiResponseFactory::success(
             array_map(
                 static fn ($customer): array => $customer->toArray(),
                 $result->customers,

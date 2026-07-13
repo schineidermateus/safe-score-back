@@ -10,7 +10,7 @@ final class HealthCheckController
 {
     public function __invoke(): JsonResponse
     {
-        return ApiResponse::success([
+        return ApiResponseFactory::success([
             'status' => 'ok',
             'service' => 'safe-score-back',
         ]);

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Customers\Presentation\Http\Controller;
 
 use App\Customers\Application\UseCase\GetCustomer;
-use App\Shared\Presentation\Http\ApiResponse;
+use App\Shared\Presentation\Http\ApiResponseFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -20,6 +20,6 @@ final readonly class GetCustomerController
     #[IsGranted('ROLE_ORGANIZATION_VIEWER')]
     public function __invoke(string $id): JsonResponse
     {
-        return ApiResponse::success($this->getCustomer->execute($id)->toArray());
+        return ApiResponseFactory::success($this->getCustomer->execute($id)->toArray());
     }
 }

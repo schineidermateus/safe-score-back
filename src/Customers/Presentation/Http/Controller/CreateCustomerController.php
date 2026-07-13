@@ -6,7 +6,7 @@ namespace App\Customers\Presentation\Http\Controller;
 
 use App\Customers\Application\DTO\CreateCustomerInput;
 use App\Customers\Application\UseCase\CreateCustomer;
-use App\Shared\Presentation\Http\ApiResponse;
+use App\Shared\Presentation\Http\ApiResponseFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -24,6 +24,6 @@ final readonly class CreateCustomerController
     {
         $customer = $this->createCustomer->execute($input);
 
-        return ApiResponse::success($customer->toArray(), status: 201);
+        return ApiResponseFactory::success($customer->toArray(), status: 201);
     }
 }

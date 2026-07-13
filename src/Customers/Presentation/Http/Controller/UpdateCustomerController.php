@@ -6,7 +6,7 @@ namespace App\Customers\Presentation\Http\Controller;
 
 use App\Customers\Application\DTO\UpdateCustomerInput;
 use App\Customers\Application\UseCase\UpdateCustomer;
-use App\Shared\Presentation\Http\ApiResponse;
+use App\Shared\Presentation\Http\ApiResponseFactory;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,6 +22,6 @@ final readonly class UpdateCustomerController
     #[IsGranted('ROLE_ORGANIZATION_ANALYST')]
     public function __invoke(string $id, #[MapRequestPayload] UpdateCustomerInput $input): JsonResponse
     {
-        return ApiResponse::success($this->updateCustomer->execute($id, $input)->toArray());
+        return ApiResponseFactory::success($this->updateCustomer->execute($id, $input)->toArray());
     }
 }
