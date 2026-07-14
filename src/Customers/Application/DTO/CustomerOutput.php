@@ -9,7 +9,7 @@ use App\Customers\Domain\Entity\Customer;
 final readonly class CustomerOutput
 {
     public function __construct(
-        public string $id,
+        public int $id,
         public ?string $externalId,
         public string $legalName,
         public ?string $tradeName,
@@ -25,7 +25,7 @@ final readonly class CustomerOutput
     public static function fromEntity(Customer $customer): self
     {
         return new self(
-            $customer->id(),
+            $customer->requireId(),
             $customer->externalId(),
             $customer->legalName(),
             $customer->tradeName(),
@@ -39,7 +39,7 @@ final readonly class CustomerOutput
     }
 
     /**
-     * @return array<string, string|null>
+     * @return array<string, int|string|null>
      */
     public function toArray(): array
     {

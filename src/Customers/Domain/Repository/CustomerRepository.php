@@ -6,25 +6,25 @@ namespace App\Customers\Domain\Repository;
 
 use App\Customers\Domain\Entity\Customer;
 use App\Customers\Domain\Enum\CustomerStatus;
-use App\Organizations\Domain\ValueObject\OrganizationId;
+use App\Organizations\Domain\Entity\Organization;
 
 interface CustomerRepository
 {
     public function save(Customer $customer): void;
 
-    public function findById(OrganizationId $organizationId, string $customerId): ?Customer;
+    public function findById(Organization $organization, int $customerId): ?Customer;
 
     public function documentExists(
-        OrganizationId $organizationId,
+        Organization $organization,
         string $document,
-        ?string $exceptCustomerId = null,
+        ?int $exceptCustomerId = null,
     ): bool;
 
     /**
      * @return list<Customer>
      */
     public function list(
-        OrganizationId $organizationId,
+        Organization $organization,
         ?string $search,
         ?CustomerStatus $status,
         int $page,
@@ -33,7 +33,7 @@ interface CustomerRepository
     ): array;
 
     public function countMatching(
-        OrganizationId $organizationId,
+        Organization $organization,
         ?string $search,
         ?CustomerStatus $status,
     ): int;

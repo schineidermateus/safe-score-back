@@ -7,7 +7,7 @@ namespace App\Customers\Infrastructure\Persistence\Doctrine;
 use App\Customers\Domain\Entity\Customer;
 use App\Customers\Domain\Enum\CustomerStatus;
 use App\Customers\Domain\Repository\CustomerRepository;
-use App\Organizations\Domain\ValueObject\OrganizationId;
+use App\Organizations\Domain\Entity\Organization;
 use App\Shared\Domain\Exception\DomainException;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -36,28 +36,28 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
         }
     }
 
-    public function findById(OrganizationId $organizationId, string $customerId): ?Customer
+    public function findById(Organization $organization, int $customerId): ?Customer
     {
         return $this->createQueryBuilder('customer')
-            ->andWhere('customer.organizationId = :organizationId')
+            ->andWhere('customer.organization = :organization')
             ->andWhere('customer.id = :customerId')
             ->andWhere('customer.deletedAt IS NULL')
-            ->setParameter('organizationId', (string) $organizationId)
+            ->setParameter('organization', $organization)
             ->setParameter('customerId', $customerId)
             ->getQuery()
             ->getOneOrNullResult();
     }
 
     public function documentExists(
-        OrganizationId $organizationId,
+        Organization $organization,
         string $document,
-        ?string $exceptCustomerId = null,
+        ?int $exceptCustomerId = null,
     ): bool {
         $queryBuilder = $this->createQueryBuilder('customer')
             ->select('COUNT(customer.id)')
-            ->andWhere('customer.organizationId = :organizationId')
+            ->andWhere('customer.organization = :organization')
             ->andWhere('customer.document = :document')
-            ->setParameter('organizationId', (string) $organizationId)
+            ->setParameter('organization', $organization)
             ->setParameter('document', $document);
 
         if (null !== $exceptCustomerId) {
@@ -70,14 +70,14 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
     }
 
     public function list(
-        OrganizationId $organizationId,
+        Organization $organization,
         ?string $search,
         ?CustomerStatus $status,
         int $page,
         int $perPage,
         string $sort,
     ): array {
-        $queryBuilder = $this->filteredQuery($organizationId, $search, $status);
+        $queryBuilder = $this->filteredQuery($organization, $search, $status);
         [$field, $direction] = $this->sort($sort);
 
         /** @var list<Customer> $customers */
@@ -92,25 +92,25 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
     }
 
     public function countMatching(
-        OrganizationId $organizationId,
+        Organization $organization,
         ?string $search,
         ?CustomerStatus $status,
     ): int {
-        return (int) $this->filteredQuery($organizationId, $search, $status)
+        return (int) $this->filteredQuery($organization, $search, $status)
             ->select('COUNT(customer.id)')
             ->getQuery()
             ->getSingleScalarResult();
     }
 
     private function filteredQuery(
-        OrganizationId $organizationId,
+        Organization $organization,
         ?string $search,
         ?CustomerStatus $status,
     ): QueryBuilder {
         $queryBuilder = $this->createQueryBuilder('customer')
-            ->andWhere('customer.organizationId = :organizationId')
+            ->andWhere('customer.organization = :organization')
             ->andWhere('customer.deletedAt IS NULL')
-            ->setParameter('organizationId', (string) $organizationId);
+            ->setParameter('organization', $organization);
 
         if (null !== $search && '' !== trim($search)) {
             $queryBuilder

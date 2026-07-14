@@ -206,3 +206,10 @@ Uma tarefa só está concluída quando:
 - possui estado de loading/erro/vazio no frontend;
 - não introduz warning de análise estática;
 - documentação foi atualizada quando necessário.
+
+## 14. Identificadores persistidos
+
+- Usar INT UNSIGNED AUTO_INCREMENT para User, Organization, OrganizationMembership e Customer.
+- O banco gera o identificador.
+- Não usar UUID ou ULID nessas entidades.
+- Toda consulta de negócio continua explicitamente limitada pela organização atual.

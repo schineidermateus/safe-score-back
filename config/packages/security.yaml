@@ -1,18 +1,9 @@
 security:
     providers:
         safe_score_users:
-            id: App\Identity\Infrastructure\Security\UserProvider
-
-    role_hierarchy:
-        ROLE_ORGANIZATION_ADMIN:
-            - ROLE_ORGANIZATION_MANAGER
-            - ROLE_ORGANIZATION_ANALYST
-            - ROLE_ORGANIZATION_VIEWER
-        ROLE_ORGANIZATION_MANAGER:
-            - ROLE_ORGANIZATION_ANALYST
-            - ROLE_ORGANIZATION_VIEWER
-        ROLE_ORGANIZATION_ANALYST:
-            - ROLE_ORGANIZATION_VIEWER
+            entity:
+                class: App\Identity\Domain\Entity\User
+                property: email
 
     firewalls:
         dev:
@@ -25,15 +16,31 @@ security:
             provider: safe_score_users
             entry_point: App\Identity\Infrastructure\Security\ApiAuthenticationEntryPoint
 
-    access_control:
-        - { path: ^/(_(profiler|wdt)), roles: PUBLIC_ACCESS }
-        - { path: ^/health$, roles: PUBLIC_ACCESS }
-        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
-        - { path: ^/api/v1/auth, roles: PUBLIC_ACCESS }
-        - { path: ^/api/v1, roles: ROLE_USER }
+when@dev:
+    security:
+        firewalls:
+            api:
+                security: false
+        access_control:
+            - { path: ^/(_(profiler|wdt)), roles: PUBLIC_ACCESS }
+            - { path: ^/health$, roles: PUBLIC_ACCESS }
+            - { path: ^/api/docs, roles: PUBLIC_ACCESS }
+            - { path: ^/api/v1, roles: PUBLIC_ACCESS }
 
 when@test:
     security:
         firewalls:
             api:
                 security: false
+        access_control:
+            - { path: ^/health$, roles: PUBLIC_ACCESS }
+            - { path: ^/api/docs, roles: PUBLIC_ACCESS }
+            - { path: ^/api/v1, roles: PUBLIC_ACCESS }
+
+when@prod:
+    security:
+        access_control:
+            - { path: ^/health$, roles: PUBLIC_ACCESS }
+            - { path: ^/api/docs, roles: PUBLIC_ACCESS }
+            - { path: ^/api/v1/auth, roles: PUBLIC_ACCESS }
+            - { path: ^/api/v1, roles: ROLE_USER }

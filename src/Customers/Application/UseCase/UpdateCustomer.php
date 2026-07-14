@@ -8,21 +8,21 @@ use App\Customers\Application\DTO\CustomerOutput;
 use App\Customers\Application\DTO\UpdateCustomerInput;
 use App\Customers\Domain\Enum\CustomerStatus;
 use App\Customers\Domain\Repository\CustomerRepository;
-use App\Organizations\Application\Context\OrganizationContextInterface;
+use App\Organizations\Application\Context\CurrentOrganizationProviderInterface;
 use App\Shared\Domain\Exception\DomainException;
 
 final readonly class UpdateCustomer
 {
     public function __construct(
         private CustomerRepository $repository,
-        private OrganizationContextInterface $organizationContext,
+        private CurrentOrganizationProviderInterface $currentOrganization,
     ) {
     }
 
-    public function execute(string $customerId, UpdateCustomerInput $input): CustomerOutput
+    public function execute(int $customerId, UpdateCustomerInput $input): CustomerOutput
     {
-        $organizationId = $this->organizationContext->requireOrganizationId();
-        $customer = $this->repository->findById($organizationId, $customerId);
+        $organization = $this->currentOrganization->currentOrganization();
+        $customer = $this->repository->findById($organization, $customerId);
 
         if (null === $customer) {
             throw new DomainException('CUSTOMER_NOT_FOUND', 'Cliente não encontrado.', 404);
@@ -31,7 +31,7 @@ final readonly class UpdateCustomer
         $document = CustomerDocument::normalize($input->document);
         if (
             null !== $document
-            && $this->repository->documentExists($organizationId, $document, $customer->id())
+            && $this->repository->documentExists($organization, $document, $customer->requireId())
         ) {
             throw new DomainException('CUSTOMER_DOCUMENT_ALREADY_EXISTS', 'Já existe um cliente com este documento.', 409, 'document');
         }

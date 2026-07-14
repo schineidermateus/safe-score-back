@@ -6,9 +6,9 @@ namespace App\Customers\Domain\Entity;
 
 use App\Customers\Domain\Enum\CustomerStatus;
 use App\Customers\Infrastructure\Persistence\Doctrine\DoctrineCustomerRepository;
-use App\Organizations\Domain\ValueObject\OrganizationId;
+use App\Organizations\Domain\Entity\Organization;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Uid\Ulid;
 
 #[ORM\Entity(repositoryClass: DoctrineCustomerRepository::class)]
 #[ORM\Table(name: 'customer')]
@@ -19,11 +19,13 @@ use Symfony\Component\Uid\Ulid;
 class Customer
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 26)]
-    private string $id;
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
+    private ?int $id = null;
 
-    #[ORM\Column(name: 'organization_id', type: 'string', length: 64)]
-    private string $organizationId;
+    #[ORM\ManyToOne(targetEntity: Organization::class)]
+    #[ORM\JoinColumn(name: 'organization_id', nullable: false, onDelete: 'RESTRICT', options: ['unsigned' => true])]
+    private Organization $organization;
 
     #[ORM\Column(name: 'external_id', type: 'string', length: 100, nullable: true)]
     private ?string $externalId;
@@ -55,12 +57,13 @@ class Customer
     #[ORM\Column(name: 'deleted_at', type: 'datetime_immutable', nullable: true)]
     private ?\DateTimeImmutable $deletedAt = null;
 
-    private function __construct()
+    private function __construct(?int $id = null)
     {
+        $this->id = $id;
     }
 
     public static function create(
-        OrganizationId $organizationId,
+        Organization $organization,
         string $legalName,
         ?string $tradeName,
         ?string $document,
@@ -70,8 +73,7 @@ class Customer
         \DateTimeImmutable $now,
     ): self {
         $customer = new self();
-        $customer->id = (string) new Ulid();
-        $customer->organizationId = (string) $organizationId;
+        $customer->organization = $organization;
         $customer->legalName = self::requiredText($legalName);
         $customer->tradeName = self::optionalText($tradeName);
         $customer->document = self::optionalText($document);
@@ -115,14 +117,19 @@ class Customer
         $this->updatedAt = $now;
     }
 
-    public function id(): string
+    public function id(): ?int
     {
         return $this->id;
     }
 
-    public function organizationId(): OrganizationId
+    public function requireId(): int
     {
-        return new OrganizationId($this->organizationId);
+        return $this->id ?? throw new \LogicException('Customer has not been persisted yet.');
+    }
+
+    public function organization(): Organization
+    {
+        return $this->organization;
     }
 
     public function externalId(): ?string

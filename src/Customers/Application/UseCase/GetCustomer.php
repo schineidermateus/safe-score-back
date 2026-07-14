@@ -6,21 +6,21 @@ namespace App\Customers\Application\UseCase;
 
 use App\Customers\Application\DTO\CustomerOutput;
 use App\Customers\Domain\Repository\CustomerRepository;
-use App\Organizations\Application\Context\OrganizationContextInterface;
+use App\Organizations\Application\Context\CurrentOrganizationProviderInterface;
 use App\Shared\Domain\Exception\DomainException;
 
 final readonly class GetCustomer
 {
     public function __construct(
         private CustomerRepository $repository,
-        private OrganizationContextInterface $organizationContext,
+        private CurrentOrganizationProviderInterface $currentOrganization,
     ) {
     }
 
-    public function execute(string $customerId): CustomerOutput
+    public function execute(int $customerId): CustomerOutput
     {
         $customer = $this->repository->findById(
-            $this->organizationContext->requireOrganizationId(),
+            $this->currentOrganization->currentOrganization(),
             $customerId,
         );
 

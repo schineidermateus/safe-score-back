@@ -8,28 +8,28 @@ use App\Customers\Application\DTO\CreateCustomerInput;
 use App\Customers\Application\DTO\CustomerOutput;
 use App\Customers\Domain\Entity\Customer;
 use App\Customers\Domain\Repository\CustomerRepository;
-use App\Organizations\Application\Context\OrganizationContextInterface;
+use App\Organizations\Application\Context\CurrentOrganizationProviderInterface;
 use App\Shared\Domain\Exception\DomainException;
 
 final readonly class CreateCustomer
 {
     public function __construct(
         private CustomerRepository $repository,
-        private OrganizationContextInterface $organizationContext,
+        private CurrentOrganizationProviderInterface $currentOrganization,
     ) {
     }
 
     public function execute(CreateCustomerInput $input): CustomerOutput
     {
-        $organizationId = $this->organizationContext->requireOrganizationId();
+        $organization = $this->currentOrganization->currentOrganization();
         $document = CustomerDocument::normalize($input->document);
 
-        if (null !== $document && $this->repository->documentExists($organizationId, $document)) {
+        if (null !== $document && $this->repository->documentExists($organization, $document)) {
             throw new DomainException('CUSTOMER_DOCUMENT_ALREADY_EXISTS', 'Já existe um cliente com este documento.', 409, 'document');
         }
 
         $customer = Customer::create(
-            $organizationId,
+            $organization,
             $input->legalName,
             $input->tradeName,
             $document,

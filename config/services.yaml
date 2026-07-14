@@ -10,8 +10,18 @@ services:
         exclude:
             - '../src/Kernel.php'
 
-    App\Organizations\Application\Context\OrganizationContextInterface:
-        alias: App\Organizations\Application\Context\OrganizationContext
-
+    App\Identity\Domain\Repository\UserRepository:
+        alias: App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserRepository
+    App\Organizations\Domain\Repository\OrganizationRepository:
+        alias: App\Organizations\Infrastructure\Persistence\Doctrine\DoctrineOrganizationRepository
+    App\Organizations\Domain\Repository\OrganizationMembershipRepository:
+        alias: App\Organizations\Infrastructure\Persistence\Doctrine\DoctrineOrganizationMembershipRepository
     App\Customers\Domain\Repository\CustomerRepository:
         alias: App\Customers\Infrastructure\Persistence\Doctrine\DoctrineCustomerRepository
+
+    App\Identity\Application\Context\CurrentUserProviderInterface:
+        alias: App\Identity\Infrastructure\Context\UnavailableCurrentUserProvider
+    App\Organizations\Application\Context\CurrentOrganizationProviderInterface:
+        alias: App\Organizations\Infrastructure\Context\UnavailableCurrentOrganizationProvider
+    App\Organizations\Application\Context\CurrentMembershipProviderInterface:
+        alias: App\Organizations\Infrastructure\Context\UnavailableCurrentMembershipProvider

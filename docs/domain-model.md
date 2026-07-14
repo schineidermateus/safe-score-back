@@ -50,7 +50,7 @@ Campos:
 - created_at
 - updated_at
 
-### OrganizationUser
+### OrganizationMembership
 
 Relaciona usuário e organização.
 
@@ -63,10 +63,17 @@ Campos:
 - status
 - created_at
 
+Status:
+
+- ACTIVE
+- INVITED
+- SUSPENDED
+- REMOVED
+
 Roles:
 
+- OWNER
 - ADMIN
-- MANAGER
 - ANALYST
 - VIEWER
 
@@ -277,7 +284,7 @@ Controla o ciclo da importação e suas linhas.
 ## 6. Relacionamentos
 
 ```text
-Organization 1 ── N OrganizationUser N ── 1 User
+Organization 1 ── N OrganizationMembership N ── 1 User
 Organization 1 ── N Customer
 Customer 1 ── N CreditLimit
 Customer 1 ── N Receivable
@@ -294,3 +301,10 @@ Organization 1 ── N AuditLog
 - Não permitir sobreposição de limites ativos.
 - Toda entidade de negócio deve possuir organization_id.
 - Exclusões devem preferir soft delete quando houver impacto histórico.
+
+## 8. Identificadores
+
+- User, Organization, OrganizationMembership e Customer usam INT UNSIGNED AUTO_INCREMENT.
+- O MySQL gera os identificadores; o domínio não gera UUID ou ULID.
+- Foreign keys devem usar o mesmo tipo e signedness.
+- IDs sequenciais nunca substituem a validação de organização e vínculo.

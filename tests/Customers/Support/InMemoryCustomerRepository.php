@@ -7,43 +7,39 @@ namespace App\Tests\Customers\Support;
 use App\Customers\Domain\Entity\Customer;
 use App\Customers\Domain\Enum\CustomerStatus;
 use App\Customers\Domain\Repository\CustomerRepository;
-use App\Organizations\Domain\ValueObject\OrganizationId;
+use App\Organizations\Domain\Entity\Organization;
+use App\Tests\Support\EntityId;
 
 final class InMemoryCustomerRepository implements CustomerRepository
 {
-    /**
-     * @var array<string, Customer>
-     */
+    /** @var array<int, Customer> */
     private array $customers = [];
+    private int $nextId = 1;
 
     public function save(Customer $customer): void
     {
-        $this->customers[$customer->id()] = $customer;
+        if (null === $customer->id()) {
+            EntityId::assign($customer, $this->nextId++);
+        }
+
+        $this->customers[$customer->requireId()] = $customer;
     }
 
-    public function findById(OrganizationId $organizationId, string $customerId): ?Customer
+    public function findById(Organization $organization, int $customerId): ?Customer
     {
         $customer = $this->customers[$customerId] ?? null;
-
-        if (
-            null === $customer
-            || !$customer->organizationId()->equals($organizationId)
-            || null !== $customer->deletedAt()
-        ) {
+        if (null === $customer || $customer->organization() !== $organization || null !== $customer->deletedAt()) {
             return null;
         }
 
         return $customer;
     }
 
-    public function documentExists(
-        OrganizationId $organizationId,
-        string $document,
-        ?string $exceptCustomerId = null,
-    ): bool {
+    public function documentExists(Organization $organization, string $document, ?int $exceptCustomerId = null): bool
+    {
         foreach ($this->customers as $customer) {
             if (
-                $customer->organizationId()->equals($organizationId)
+                $customer->organization() === $organization
                 && $customer->document() === $document
                 && $customer->id() !== $exceptCustomerId
             ) {
@@ -55,19 +51,15 @@ final class InMemoryCustomerRepository implements CustomerRepository
     }
 
     public function list(
-        OrganizationId $organizationId,
+        Organization $organization,
         ?string $search,
         ?CustomerStatus $status,
         int $page,
         int $perPage,
         string $sort,
     ): array {
-        $customers = $this->filtered($organizationId, $search, $status);
-        usort(
-            $customers,
-            static fn (Customer $left, Customer $right): int => $left->legalName() <=> $right->legalName(),
-        );
-
+        $customers = $this->filtered($organization, $search, $status);
+        usort($customers, static fn (Customer $a, Customer $b): int => $a->legalName() <=> $b->legalName());
         if (str_starts_with($sort, '-')) {
             $customers = array_reverse($customers);
         }
@@ -75,45 +67,29 @@ final class InMemoryCustomerRepository implements CustomerRepository
         return array_values(array_slice($customers, ($page - 1) * $perPage, $perPage));
     }
 
-    public function countMatching(
-        OrganizationId $organizationId,
-        ?string $search,
-        ?CustomerStatus $status,
-    ): int {
-        return count($this->filtered($organizationId, $search, $status));
+    public function countMatching(Organization $organization, ?string $search, ?CustomerStatus $status): int
+    {
+        return count($this->filtered($organization, $search, $status));
     }
 
-    /**
-     * @return list<Customer>
-     */
-    private function filtered(
-        OrganizationId $organizationId,
-        ?string $search,
-        ?CustomerStatus $status,
-    ): array {
+    /** @return list<Customer> */
+    private function filtered(Organization $organization, ?string $search, ?CustomerStatus $status): array
+    {
         return array_values(array_filter(
             $this->customers,
-            static function (Customer $customer) use ($organizationId, $search, $status): bool {
+            static function (Customer $customer) use ($organization, $search, $status): bool {
                 if (
-                    !$customer->organizationId()->equals($organizationId)
+                    $customer->organization() !== $organization
                     || null !== $customer->deletedAt()
                     || (null !== $status && $customer->status() !== $status)
                 ) {
                     return false;
                 }
-
                 if (null === $search || '' === trim($search)) {
                     return true;
                 }
 
-                $haystack = implode(' ', array_filter([
-                    $customer->legalName(),
-                    $customer->tradeName(),
-                    $customer->document(),
-                    $customer->externalId(),
-                ]));
-
-                return str_contains(mb_strtolower($haystack), mb_strtolower(trim($search)));
+                return str_contains(mb_strtolower($customer->legalName()), mb_strtolower(trim($search)));
             },
         ));
     }

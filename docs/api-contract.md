@@ -52,6 +52,8 @@ Request:
 
 Retorna usuário, organização ativa e permissões.
 
+Nesta fase, o contexto é fornecido por providers exclusivos de dev e test. A futura autenticação JWT substituirá esses providers.
+
 ## 3. Organizações
 
 ### GET /organizations/current
@@ -60,9 +62,33 @@ Retorna usuário, organização ativa e permissões.
 
 ### GET /organizations/current/users
 
+Implementado como:
+
+```text
+GET /organizations/current/members
+```
+
 ### POST /organizations/current/users/invitations
 
+Implementado nesta fase, sem convite por e-mail, como:
+
+```text
+POST /organizations/current/members
+```
+
 ### PATCH /organizations/current/users/{id}
+
+Implementado como:
+
+```text
+PATCH /organizations/current/members/{id}
+```
+
+IDs de usuários, organizações, vínculos e clientes são inteiros. Exemplo:
+
+```text
+GET /customers/123
+```
 
 ## 4. Clientes
 

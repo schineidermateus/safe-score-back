@@ -1,0 +1,23 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    App\Identity\Infrastructure\Context\DevelopmentCurrentUserProvider:
+        arguments:
+            $userId: '%env(int:DEV_USER_ID)%'
+            $environment: '%kernel.environment%'
+    App\Organizations\Infrastructure\Context\DevelopmentCurrentOrganizationProvider:
+        arguments:
+            $organizationId: '%env(int:DEV_ORGANIZATION_ID)%'
+            $environment: '%kernel.environment%'
+    App\Organizations\Infrastructure\Context\DevelopmentCurrentMembershipProvider:
+        arguments:
+            $environment: '%kernel.environment%'
+
+    App\Identity\Application\Context\CurrentUserProviderInterface:
+        alias: App\Identity\Infrastructure\Context\DevelopmentCurrentUserProvider
+    App\Organizations\Application\Context\CurrentOrganizationProviderInterface:
+        alias: App\Organizations\Infrastructure\Context\DevelopmentCurrentOrganizationProvider
+    App\Organizations\Application\Context\CurrentMembershipProviderInterface:
+        alias: App\Organizations\Infrastructure\Context\DevelopmentCurrentMembershipProvider
