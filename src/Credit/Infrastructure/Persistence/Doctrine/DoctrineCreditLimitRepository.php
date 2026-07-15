@@ -150,4 +150,27 @@ final class DoctrineCreditLimitRepository extends ServiceEntityRepository implem
             'status' => CreditLimitStatus::Active,
         ]);
     }
+
+    public function findActiveByOrganizationAndDate(Organization $organization, \DateTimeImmutable $referenceDate): array
+    {
+        /** @var list<CreditLimit> $limits */
+        $limits = $this->createQueryBuilder('creditLimit')
+            ->addSelect('customer')
+            ->innerJoin('creditLimit.customer', 'customer')
+            ->andWhere('creditLimit.organization = :organization')
+            ->andWhere('customer.organization = :organization')
+            ->andWhere('customer.deletedAt IS NULL')
+            ->andWhere('creditLimit.status = :status')
+            ->andWhere('creditLimit.validFrom <= :referenceDate')
+            ->andWhere('(creditLimit.validUntil IS NULL OR creditLimit.validUntil >= :referenceDate)')
+            ->setParameter('organization', $organization)
+            ->setParameter('status', CreditLimitStatus::Active)
+            ->setParameter('referenceDate', $referenceDate)
+            ->orderBy('creditLimit.customer', 'ASC')
+            ->addOrderBy('creditLimit.validFrom', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $limits;
+    }
 }

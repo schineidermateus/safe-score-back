@@ -37,6 +37,8 @@ services:
         alias: App\Imports\Infrastructure\Persistence\Doctrine\DoctrineImportBatchRepository
     App\Imports\Domain\Repository\ImportRowRepository:
         alias: App\Imports\Infrastructure\Persistence\Doctrine\DoctrineImportRowRepository
+    App\Reporting\Domain\Repository\FinancialIndicatorsQueryInterface:
+        alias: App\Reporting\Infrastructure\Persistence\Doctrine\DoctrineFinancialIndicatorsQuery
     App\Imports\Application\Port\ImportFileStorageInterface:
         alias: App\Imports\Infrastructure\Storage\LocalImportFileStorage
     App\Imports\Application\Port\CsvReaderInterface:
@@ -62,6 +64,11 @@ services:
             $decorated: '@.inner'
 
     App\Imports\Infrastructure\OpenApi\ImportOpenApiFactory:
+        decorates: 'api_platform.openapi.factory'
+        arguments:
+            $decorated: '@.inner'
+
+    App\Reporting\Infrastructure\OpenApi\FinancialIndicatorsOpenApiFactory:
         decorates: 'api_platform.openapi.factory'
         arguments:
             $decorated: '@.inner'

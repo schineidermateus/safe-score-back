@@ -43,4 +43,7 @@ interface CustomerRepository
         ?string $search,
         ?CustomerStatus $status,
     ): int;
+
+    /** @return list<Customer> */
+    public function listAll(Organization $organization): array;
 }

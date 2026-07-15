@@ -107,6 +107,14 @@ final class InMemoryCreditLimitRepository implements CreditLimitRepository
         return null;
     }
 
+    public function findActiveByOrganizationAndDate(Organization $organization, \DateTimeImmutable $referenceDate): array
+    {
+        return array_values(array_filter(
+            $this->items,
+            static fn (CreditLimit $limit): bool => $limit->organization() === $organization && $limit->isApplicableAt($referenceDate),
+        ));
+    }
+
     /** @return list<CreditLimit> */
     public function all(): array
     {

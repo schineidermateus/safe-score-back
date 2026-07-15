@@ -53,6 +53,7 @@ final class AuthorizationServiceTest extends TestCase
             AuthorizationAction::ImportValidate,
             AuthorizationAction::ImportProcess,
             AuthorizationAction::ImportCancel,
+            AuthorizationAction::FinancialIndicatorsRead,
             AuthorizationAction::ResolveAlerts,
             AuthorizationAction::RecalculateScore,
         ];
@@ -63,7 +64,7 @@ final class AuthorizationServiceTest extends TestCase
                     MembershipRole::Owner => true,
                     MembershipRole::Admin => in_array($action, [...$operational, AuthorizationAction::CreditLimitRevoke, AuthorizationAction::ManageMembers], true),
                     MembershipRole::Analyst => in_array($action, $operational, true),
-                    MembershipRole::Viewer => in_array($action, [AuthorizationAction::ViewData, AuthorizationAction::CreditLimitRead, AuthorizationAction::ReceivableRead], true),
+                    MembershipRole::Viewer => in_array($action, [AuthorizationAction::ViewData, AuthorizationAction::CreditLimitRead, AuthorizationAction::ReceivableRead, AuthorizationAction::FinancialIndicatorsRead], true),
                 };
 
                 yield $role->value.' '.$action->value => [$role, $action, $allowed];
@@ -92,6 +93,7 @@ final class AuthorizationServiceTest extends TestCase
         yield 'viewer reads' => [MembershipRole::Viewer, AuthorizationAction::ViewData];
         yield 'viewer reads credit limits' => [MembershipRole::Viewer, AuthorizationAction::CreditLimitRead];
         yield 'viewer reads receivables' => [MembershipRole::Viewer, AuthorizationAction::ReceivableRead];
+        yield 'viewer reads financial indicators' => [MembershipRole::Viewer, AuthorizationAction::FinancialIndicatorsRead];
         yield 'analyst writes credit limits' => [MembershipRole::Analyst, AuthorizationAction::CreditLimitWrite];
         yield 'admin revokes credit limits' => [MembershipRole::Admin, AuthorizationAction::CreditLimitRevoke];
     }
@@ -185,6 +187,15 @@ final class AuthorizationServiceTest extends TestCase
                 self::assertSame(403, $exception->statusCode());
             }
         }
+    }
+
+    public function testInactiveMembershipDeniesFinancialIndicators(): void
+    {
+        $context = $this->context(MembershipRole::Viewer);
+        $context->currentMembership()->suspend(new \DateTimeImmutable());
+
+        $this->expectException(DomainException::class);
+        (new AuthorizationService($context))->assertGranted(AuthorizationAction::FinancialIndicatorsRead);
     }
 
     /** @return iterable<string, array{MembershipStatus}> */

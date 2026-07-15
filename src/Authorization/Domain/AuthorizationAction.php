@@ -20,6 +20,7 @@ enum AuthorizationAction: string
     case ImportValidate = 'IMPORT_VALIDATE';
     case ImportProcess = 'IMPORT_PROCESS';
     case ImportCancel = 'IMPORT_CANCEL';
+    case FinancialIndicatorsRead = 'FINANCIAL_INDICATORS_READ';
     case ResolveAlerts = 'RESOLVE_ALERTS';
     case RecalculateScore = 'RECALCULATE_SCORE';
     case ManageMembers = 'MANAGE_MEMBERS';

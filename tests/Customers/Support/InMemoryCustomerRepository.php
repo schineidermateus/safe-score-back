@@ -109,6 +109,11 @@ final class InMemoryCustomerRepository implements CustomerRepository
         return count($this->filtered($organization, $search, $status));
     }
 
+    public function listAll(Organization $organization): array
+    {
+        return $this->filtered($organization, null, null);
+    }
+
     /** @return list<Customer> */
     private function filtered(Organization $organization, ?string $search, ?CustomerStatus $status): array
     {

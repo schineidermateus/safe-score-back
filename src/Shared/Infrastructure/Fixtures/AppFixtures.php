@@ -141,6 +141,45 @@ final class AppFixtures extends Fixture
             $manager->persist($entity);
         }
 
+        $indicatorNow = new \DateTimeImmutable('2026-07-15 12:00:00');
+        $indicatorOrganization = Organization::create('SafeScore Indicadores LTDA', 'Fixtures Indicadores', '53113791000122', $indicatorNow);
+        $indicatorOtherOrganization = Organization::create('SafeScore Indicadores Tenant B LTDA', 'Fixtures Tenant B', '62492044000109', $indicatorNow);
+        $indicatorOwner = User::create('Owner Fixtures Indicadores', 'indicators@safescore.local', $indicatorNow);
+        $indicatorOtherOwner = User::create('Owner Fixtures Indicadores B', 'indicators-b@safescore.local', $indicatorNow);
+        foreach ([$indicatorOrganization, $indicatorOtherOrganization, $indicatorOwner, $indicatorOtherOwner] as $entity) {
+            $manager->persist($entity);
+        }
+        $manager->persist(OrganizationMembership::join($indicatorOrganization, $indicatorOwner, MembershipRole::Owner, $indicatorNow));
+        $manager->persist(OrganizationMembership::join($indicatorOtherOrganization, $indicatorOtherOwner, MembershipRole::Owner, $indicatorNow));
+
+        $indicatorA = Customer::create($indicatorOrganization, 'Indicadores Cliente A', 'Indicador A', '52998224725', 'IND-A', null, null, $indicatorNow);
+        $indicatorB = Customer::create($indicatorOrganization, 'Indicadores Cliente B', 'Indicador B', '39053344705', 'IND-B', null, null, $indicatorNow);
+        $indicatorC = Customer::create($indicatorOrganization, 'Indicadores Cliente C', 'Indicador C', null, 'IND-C', null, null, $indicatorNow);
+        $indicatorOtherTenant = Customer::create($indicatorOtherOrganization, 'Indicadores Outro Tenant', 'Indicador Tenant B', null, 'IND-OTHER', null, null, $indicatorNow);
+        foreach ([$indicatorA, $indicatorB, $indicatorC, $indicatorOtherTenant] as $customer) {
+            $manager->persist($customer);
+        }
+        $manager->persist(CreditLimit::createActive($indicatorOrganization, $indicatorA, new MoneyAmount('100000.00'), new \DateTimeImmutable('2026-01-01'), null, 'Fixture controlada de indicadores A.', $indicatorOwner, $indicatorNow));
+        $manager->persist(CreditLimit::createActive($indicatorOrganization, $indicatorB, new MoneyAmount('50000.00'), new \DateTimeImmutable('2026-01-01'), null, 'Fixture controlada de indicadores B.', $indicatorOwner, $indicatorNow));
+
+        $indicatorReceivables = [
+            Receivable::create($indicatorOrganization, $indicatorA, 'INDICATORS', 'A-UPCOMING', 'A-UPCOMING', new \DateTimeImmutable('2026-07-01'), new \DateTimeImmutable('2026-08-01'), new ReceivableAmount('40000.00'), $indicatorNow),
+            Receivable::create($indicatorOrganization, $indicatorA, 'INDICATORS', 'A-OVERDUE', 'A-OVERDUE', new \DateTimeImmutable('2026-06-01'), new \DateTimeImmutable('2026-07-05'), new ReceivableAmount('10000.00'), $indicatorNow),
+            Receivable::create($indicatorOrganization, $indicatorB, 'INDICATORS', 'B-UPCOMING', 'B-UPCOMING', new \DateTimeImmutable('2026-07-01'), new \DateTimeImmutable('2026-08-01'), new ReceivableAmount('60000.00'), $indicatorNow),
+            Receivable::create($indicatorOrganization, $indicatorC, 'INDICATORS', 'C-UPCOMING', 'C-UPCOMING', new \DateTimeImmutable('2026-07-01'), new \DateTimeImmutable('2026-08-01'), new ReceivableAmount('20000.00'), $indicatorNow),
+            Receivable::create($indicatorOtherOrganization, $indicatorOtherTenant, 'INDICATORS', 'OTHER-TENANT', 'OTHER-TENANT', new \DateTimeImmutable('2026-07-01'), new \DateTimeImmutable('2026-08-01'), new ReceivableAmount('999000.00'), $indicatorNow),
+        ];
+        for ($index = 1; $index <= 5; ++$index) {
+            $paid = Receivable::create($indicatorOrganization, $indicatorA, 'INDICATORS', 'A-PAID-'.$index, 'A-PAID-'.$index, new \DateTimeImmutable('2026-05-01'), new \DateTimeImmutable('2026-06-01'), new ReceivableAmount('100.00'), $indicatorNow);
+            $paymentDate = 5 === $index ? new \DateTimeImmutable('2026-06-06') : new \DateTimeImmutable('2026-06-01');
+            $payment = $paid->registerPayment(new ReceivableAmount('100.00'), $paymentDate, $indicatorOwner, $indicatorNow);
+            $indicatorReceivables[] = $paid;
+            $manager->persist($payment);
+        }
+        foreach ($indicatorReceivables as $receivable) {
+            $manager->persist($receivable);
+        }
+
         $manager->flush();
     }
 }

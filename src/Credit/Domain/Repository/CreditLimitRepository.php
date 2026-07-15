@@ -49,4 +49,7 @@ interface CreditLimitRepository
         ?\DateTimeImmutable $validUntil,
         string $reason,
     ): ?CreditLimit;
+
+    /** @return list<CreditLimit> */
+    public function findActiveByOrganizationAndDate(Organization $organization, \DateTimeImmutable $referenceDate): array;
 }

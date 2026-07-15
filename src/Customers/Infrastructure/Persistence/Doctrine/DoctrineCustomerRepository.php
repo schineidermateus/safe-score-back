@@ -131,6 +131,20 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
             ->getSingleScalarResult();
     }
 
+    public function listAll(Organization $organization): array
+    {
+        /** @var list<Customer> $customers */
+        $customers = $this->createQueryBuilder('customer')
+            ->andWhere('customer.organization = :organization')
+            ->andWhere('customer.deletedAt IS NULL')
+            ->setParameter('organization', $organization)
+            ->orderBy('customer.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $customers;
+    }
+
     private function filteredQuery(
         Organization $organization,
         ?string $search,

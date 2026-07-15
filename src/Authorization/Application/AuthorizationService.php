@@ -57,6 +57,7 @@ final readonly class AuthorizationService
             AuthorizationAction::ImportValidate,
             AuthorizationAction::ImportProcess,
             AuthorizationAction::ImportCancel,
+            AuthorizationAction::FinancialIndicatorsRead,
             AuthorizationAction::ResolveAlerts,
             AuthorizationAction::RecalculateScore,
         ];
@@ -73,6 +74,7 @@ final readonly class AuthorizationService
                 AuthorizationAction::ViewData,
                 AuthorizationAction::CreditLimitRead,
                 AuthorizationAction::ReceivableRead,
+                AuthorizationAction::FinancialIndicatorsRead,
             ],
         };
     }

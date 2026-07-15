@@ -112,5 +112,19 @@ final class OpenApiDocumentationTest extends WebTestCase
         foreach (['mapping', 'validate', 'preview', 'process', 'errors', 'cancel'] as $operation) {
             self::assertArrayHasKey('/api/v1/imports/{id}/'.$operation, $document['paths']);
         }
+
+        $financial = $document['paths']['/api/v1/customers/{id}/financial-summary'] ?? null;
+        self::assertIsArray($financial);
+        self::assertArrayHasKey('get', $financial);
+        self::assertTrue($financial['get']['parameters'][1]['required'] ?? false);
+        $financialData = $financial['get']['responses']['200']['content']['application/json']['schema']['properties']['data']['properties'] ?? [];
+        self::assertSame('string', $financialData['exposure']['type'] ?? null);
+        self::assertSame('string', $financialData['available_credit']['properties']['value']['oneOf'][0]['type'] ?? null);
+        self::assertArrayNotHasKey('organization_id', $financialData);
+        self::assertSame('string', $financialData['average_payment_delay_days']['properties']['value']['oneOf'][0]['type'] ?? null);
+        self::assertSame('integer', $financialData['maximum_payment_delay_days']['properties']['value']['oneOf'][0]['type'] ?? null);
+        $financialRequired = $financial['get']['responses']['200']['content']['application/json']['schema']['properties']['data']['required'] ?? [];
+        self::assertContains('data_quality_score', $financialRequired);
+        self::assertContains('last_data_update', $financialRequired);
     }
 }
