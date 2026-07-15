@@ -10,6 +10,7 @@ use App\Identity\Domain\Entity\User;
 use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
 use App\Organizations\Domain\Enum\MembershipRole;
+use App\Organizations\Domain\Enum\MembershipStatus;
 use App\Shared\Domain\Exception\DomainException;
 use App\Tests\Support\CurrentContextStub;
 use App\Tests\Support\EntityId;
@@ -115,6 +116,25 @@ final class AuthorizationServiceTest extends TestCase
 
         $this->expectException(DomainException::class);
         (new AuthorizationService($context))->assertGranted(AuthorizationAction::ViewData);
+    }
+
+    #[DataProvider('inactiveMembershipStatuses')]
+    public function testEveryInactiveMembershipStatusDeniesAccess(MembershipStatus $status): void
+    {
+        $context = $this->context(MembershipRole::Owner);
+        $property = new \ReflectionProperty(OrganizationMembership::class, 'status');
+        $property->setValue($context->currentMembership(), $status);
+
+        $this->expectException(DomainException::class);
+        (new AuthorizationService($context))->assertGranted(AuthorizationAction::ViewData);
+    }
+
+    /** @return iterable<string, array{MembershipStatus}> */
+    public static function inactiveMembershipStatuses(): iterable
+    {
+        yield MembershipStatus::Invited->value => [MembershipStatus::Invited];
+        yield MembershipStatus::Suspended->value => [MembershipStatus::Suspended];
+        yield MembershipStatus::Removed->value => [MembershipStatus::Removed];
     }
 
     private function context(MembershipRole $role): CurrentContextStub

@@ -10,6 +10,7 @@ use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\ToOneOwningSideMapping;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 final class IntegerIdentifierMappingTest extends KernelTestCase
@@ -25,6 +26,20 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
             self::assertSame(['id'], $metadata->getIdentifierFieldNames());
             self::assertSame('integer', $metadata->getTypeOfField('id'));
             self::assertSame(ClassMetadata::GENERATOR_TYPE_IDENTITY, $metadata->generatorType);
+            self::assertTrue($metadata->getFieldMapping('id')->options['unsigned'] ?? false);
+        }
+
+        foreach ([
+            [OrganizationMembership::class, 'organization', Organization::class],
+            [OrganizationMembership::class, 'user', User::class],
+            [Customer::class, 'organization', Organization::class],
+        ] as [$class, $association, $target]) {
+            $mapping = $entityManager->getClassMetadata($class)->getAssociationMapping($association);
+            self::assertInstanceOf(ToOneOwningSideMapping::class, $mapping);
+            self::assertSame($target, $mapping->targetEntity);
+            self::assertCount(1, $mapping->joinColumns);
+            self::assertSame('id', $mapping->joinColumns[0]->referencedColumnName);
+            self::assertTrue($mapping->joinColumns[0]->options['unsigned'] ?? false);
         }
     }
 }
