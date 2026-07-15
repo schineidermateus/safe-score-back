@@ -97,5 +97,20 @@ final class OpenApiDocumentationTest extends WebTestCase
         $paymentAmount = $payments['post']['requestBody']['content']['application/json']['schema']['properties']['amount'] ?? [];
         self::assertSame('string', $paymentAmount['type'] ?? null);
         self::assertSame('^(?:(?:[1-9]\\d{0,16})(?:\\.\\d{1,2})?|0\\.(?:0[1-9]|[1-9]\\d))$', $paymentAmount['pattern'] ?? null);
+
+        $imports = $document['paths']['/api/v1/imports'] ?? null;
+        self::assertIsArray($imports);
+        self::assertArrayHasKey('get', $imports);
+        self::assertArrayHasKey('post', $imports);
+        self::assertSame('binary', $imports['post']['requestBody']['content']['multipart/form-data']['schema']['properties']['file']['format'] ?? null);
+        $importResponse = $imports['post']['responses']['201']['content']['application/json']['schema'] ?? null;
+        self::assertIsArray($importResponse);
+        $batchProperties = $importResponse['properties']['data']['oneOf'][0]['properties'] ?? [];
+        self::assertSame('integer', $batchProperties['id']['type'] ?? null);
+        self::assertArrayNotHasKey('storage_key', $batchProperties);
+        self::assertArrayNotHasKey('organization_id', $batchProperties);
+        foreach (['mapping', 'validate', 'preview', 'process', 'errors', 'cancel'] as $operation) {
+            self::assertArrayHasKey('/api/v1/imports/{id}/'.$operation, $document['paths']);
+        }
     }
 }

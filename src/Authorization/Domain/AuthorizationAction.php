@@ -15,7 +15,11 @@ enum AuthorizationAction: string
     case ReceivableWrite = 'RECEIVABLE_WRITE';
     case ReceivablePaymentRegister = 'RECEIVABLE_PAYMENT_REGISTER';
     case ReceivableCancel = 'RECEIVABLE_CANCEL';
-    case ImportData = 'IMPORT_DATA';
+    case ImportRead = 'IMPORT_READ';
+    case ImportCreate = 'IMPORT_CREATE';
+    case ImportValidate = 'IMPORT_VALIDATE';
+    case ImportProcess = 'IMPORT_PROCESS';
+    case ImportCancel = 'IMPORT_CANCEL';
     case ResolveAlerts = 'RESOLVE_ALERTS';
     case RecalculateScore = 'RECALCULATE_SCORE';
     case ManageMembers = 'MANAGE_MEMBERS';

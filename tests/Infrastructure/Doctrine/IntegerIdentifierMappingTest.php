@@ -8,6 +8,8 @@ use App\Audit\Domain\Entity\AuditLog;
 use App\Credit\Domain\Entity\CreditLimit;
 use App\Customers\Domain\Entity\Customer;
 use App\Identity\Domain\Entity\User;
+use App\Imports\Domain\Entity\ImportBatch;
+use App\Imports\Domain\Entity\ImportRow;
 use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
 use App\Receivables\Domain\Entity\Receivable;
@@ -25,7 +27,7 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
 
-        foreach ([User::class, Organization::class, OrganizationMembership::class, Customer::class, CreditLimit::class, AuditLog::class, Receivable::class, ReceivablePayment::class] as $class) {
+        foreach ([User::class, Organization::class, OrganizationMembership::class, Customer::class, CreditLimit::class, AuditLog::class, Receivable::class, ReceivablePayment::class, ImportBatch::class, ImportRow::class] as $class) {
             $metadata = $entityManager->getClassMetadata($class);
             self::assertSame(['id'], $metadata->getIdentifierFieldNames());
             self::assertSame('integer', $metadata->getTypeOfField('id'));
@@ -48,6 +50,9 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
             [ReceivablePayment::class, 'organization', Organization::class],
             [ReceivablePayment::class, 'receivable', Receivable::class],
             [ReceivablePayment::class, 'createdBy', User::class],
+            [ImportBatch::class, 'organization', Organization::class],
+            [ImportBatch::class, 'createdBy', User::class],
+            [ImportRow::class, 'batch', ImportBatch::class],
         ] as [$class, $association, $target]) {
             $mapping = $entityManager->getClassMetadata($class)->getAssociationMapping($association);
             self::assertInstanceOf(ToOneOwningSideMapping::class, $mapping);
@@ -65,6 +70,16 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
         self::assertSame(
             ['organization_id', 'document'],
             $customerMetadata->table['uniqueConstraints']['uniq_customer_organization_document']['columns'] ?? null,
+        );
+        self::assertSame(
+            ['organization_id', 'external_id'],
+            $customerMetadata->table['uniqueConstraints']['uniq_customer_organization_external']['columns'] ?? null,
+        );
+
+        $rowMetadata = $entityManager->getClassMetadata(ImportRow::class);
+        self::assertSame(
+            ['import_batch_id', 'row_number'],
+            $rowMetadata->table['uniqueConstraints']['uniq_import_row_batch_number']['columns'] ?? null,
         );
 
         $creditLimitMetadata = $entityManager->getClassMetadata(CreditLimit::class);

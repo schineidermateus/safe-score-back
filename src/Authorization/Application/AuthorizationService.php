@@ -52,7 +52,11 @@ final readonly class AuthorizationService
             AuthorizationAction::ReceivableWrite,
             AuthorizationAction::ReceivablePaymentRegister,
             AuthorizationAction::ReceivableCancel,
-            AuthorizationAction::ImportData,
+            AuthorizationAction::ImportRead,
+            AuthorizationAction::ImportCreate,
+            AuthorizationAction::ImportValidate,
+            AuthorizationAction::ImportProcess,
+            AuthorizationAction::ImportCancel,
             AuthorizationAction::ResolveAlerts,
             AuthorizationAction::RecalculateScore,
         ];

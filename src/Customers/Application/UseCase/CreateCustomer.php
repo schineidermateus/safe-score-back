@@ -32,6 +32,10 @@ final readonly class CreateCustomer
             throw new DomainException('CUSTOMER_DOCUMENT_ALREADY_EXISTS', 'Já existe um cliente com este documento.', 409, 'document');
         }
 
+        if (null !== $input->externalId && '' !== trim($input->externalId) && $this->repository->externalIdExists($organization, trim($input->externalId))) {
+            throw new DomainException('CUSTOMER_EXTERNAL_ID_ALREADY_EXISTS', 'Já existe um cliente com este identificador externo.', 409, 'external_id');
+        }
+
         $customer = Customer::create(
             $organization,
             $input->legalName,

@@ -96,6 +96,17 @@ final class InMemoryCreditLimitRepository implements CreditLimitRepository
         }
     }
 
+    public function findIdenticalActive(Customer $customer, Organization $organization, string $amount, \DateTimeImmutable $validFrom, ?\DateTimeImmutable $validUntil, string $reason): ?CreditLimit
+    {
+        foreach ($this->items as $limit) {
+            if ($limit->organization() === $organization && $limit->customer() === $customer && CreditLimitStatus::Active === $limit->status() && $limit->amount() === $amount && $limit->validFrom() == $validFrom && $limit->validUntil() == $validUntil && $limit->reason() === $reason) {
+                return $limit;
+            }
+        }
+
+        return null;
+    }
+
     /** @return list<CreditLimit> */
     public function all(): array
     {

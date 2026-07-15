@@ -70,6 +70,16 @@ final class DoctrineReceivableRepository extends ServiceEntityRepository impleme
         return (int) $qb->getQuery()->getSingleScalarResult() > 0;
     }
 
+    public function findByExternalKey(Organization $organization, string $source, string $externalId, bool $forUpdate = false): ?Receivable
+    {
+        $receivable = $this->findOneBy(['organization' => $organization, 'source' => $source, 'externalId' => $externalId]);
+        if ($forUpdate && null !== $receivable) {
+            $this->getEntityManager()->lock($receivable, LockMode::PESSIMISTIC_WRITE);
+        }
+
+        return $receivable;
+    }
+
     public function list(Organization $organization, ReceivableCriteria $criteria): array
     {
         $queryBuilder = $this->matchingQuery($organization, $criteria)->addSelect('customer');

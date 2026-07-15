@@ -40,4 +40,13 @@ interface CreditLimitRepository
     ): bool;
 
     public function lockCustomer(Customer $customer, Organization $organization): void;
+
+    public function findIdenticalActive(
+        Customer $customer,
+        Organization $organization,
+        string $amount,
+        \DateTimeImmutable $validFrom,
+        ?\DateTimeImmutable $validUntil,
+        string $reason,
+    ): ?CreditLimit;
 }

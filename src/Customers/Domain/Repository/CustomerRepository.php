@@ -14,11 +14,17 @@ interface CustomerRepository
 
     public function findById(Organization $organization, int $customerId): ?Customer;
 
+    public function findByDocument(Organization $organization, string $document): ?Customer;
+
+    public function findByExternalId(Organization $organization, string $externalId): ?Customer;
+
     public function documentExists(
         Organization $organization,
         string $document,
         ?int $exceptCustomerId = null,
     ): bool;
+
+    public function externalIdExists(Organization $organization, string $externalId, ?int $exceptCustomerId = null): bool;
 
     /**
      * @return list<Customer>

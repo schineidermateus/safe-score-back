@@ -48,7 +48,11 @@ final class AuthorizationServiceTest extends TestCase
             AuthorizationAction::ReceivableWrite,
             AuthorizationAction::ReceivablePaymentRegister,
             AuthorizationAction::ReceivableCancel,
-            AuthorizationAction::ImportData,
+            AuthorizationAction::ImportRead,
+            AuthorizationAction::ImportCreate,
+            AuthorizationAction::ImportValidate,
+            AuthorizationAction::ImportProcess,
+            AuthorizationAction::ImportCancel,
             AuthorizationAction::ResolveAlerts,
             AuthorizationAction::RecalculateScore,
         ];
@@ -109,6 +113,8 @@ final class AuthorizationServiceTest extends TestCase
         yield 'viewer cannot write credit limits' => [MembershipRole::Viewer, AuthorizationAction::CreditLimitWrite];
         yield 'analyst cannot revoke credit limits' => [MembershipRole::Analyst, AuthorizationAction::CreditLimitRevoke];
         yield 'viewer cannot register payment' => [MembershipRole::Viewer, AuthorizationAction::ReceivablePaymentRegister];
+        yield 'viewer cannot read imports' => [MembershipRole::Viewer, AuthorizationAction::ImportRead];
+        yield 'viewer cannot process imports' => [MembershipRole::Viewer, AuthorizationAction::ImportProcess];
     }
 
     public function testAdminCannotManageAnExistingOwner(): void

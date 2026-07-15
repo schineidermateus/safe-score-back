@@ -137,4 +137,17 @@ final class DoctrineCreditLimitRepository extends ServiceEntityRepository implem
 
         $this->getEntityManager()->lock($customer, LockMode::PESSIMISTIC_WRITE);
     }
+
+    public function findIdenticalActive(Customer $customer, Organization $organization, string $amount, \DateTimeImmutable $validFrom, ?\DateTimeImmutable $validUntil, string $reason): ?CreditLimit
+    {
+        return $this->findOneBy([
+            'organization' => $organization,
+            'customer' => $customer,
+            'amount' => $amount,
+            'validFrom' => $validFrom,
+            'validUntil' => $validUntil,
+            'reason' => $reason,
+            'status' => CreditLimitStatus::Active,
+        ]);
+    }
 }

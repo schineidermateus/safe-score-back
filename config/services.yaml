@@ -1,4 +1,5 @@
 parameters:
+    app.import_storage_directory: '%kernel.project_dir%/var/imports'
 
 services:
     _defaults:
@@ -32,6 +33,18 @@ services:
         alias: App\Audit\Infrastructure\Persistence\Doctrine\DoctrineAuditLogRepository
     App\Shared\Application\Transaction\TransactionManagerInterface:
         alias: App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionManager
+    App\Imports\Domain\Repository\ImportBatchRepository:
+        alias: App\Imports\Infrastructure\Persistence\Doctrine\DoctrineImportBatchRepository
+    App\Imports\Domain\Repository\ImportRowRepository:
+        alias: App\Imports\Infrastructure\Persistence\Doctrine\DoctrineImportRowRepository
+    App\Imports\Application\Port\ImportFileStorageInterface:
+        alias: App\Imports\Infrastructure\Storage\LocalImportFileStorage
+    App\Imports\Application\Port\CsvReaderInterface:
+        alias: App\Imports\Infrastructure\Csv\NativeCsvReader
+
+    App\Imports\Infrastructure\Storage\LocalImportFileStorage:
+        arguments:
+            $baseDirectory: '%app.import_storage_directory%'
 
     App\Customers\Infrastructure\OpenApi\CustomerOpenApiFactory:
         decorates: 'api_platform.openapi.factory'
@@ -44,6 +57,11 @@ services:
             $decorated: '@.inner'
 
     App\Receivables\Infrastructure\OpenApi\ReceivableOpenApiFactory:
+        decorates: 'api_platform.openapi.factory'
+        arguments:
+            $decorated: '@.inner'
+
+    App\Imports\Infrastructure\OpenApi\ImportOpenApiFactory:
         decorates: 'api_platform.openapi.factory'
         arguments:
             $decorated: '@.inner'

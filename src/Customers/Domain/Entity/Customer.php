@@ -14,7 +14,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'customer')]
 #[ORM\UniqueConstraint(name: 'uniq_customer_organization_document', columns: ['organization_id', 'document'])]
 #[ORM\Index(name: 'idx_customer_organization_status', columns: ['organization_id', 'status'])]
-#[ORM\Index(name: 'idx_customer_organization_external', columns: ['organization_id', 'external_id'])]
+#[ORM\UniqueConstraint(name: 'uniq_customer_organization_external', columns: ['organization_id', 'external_id'])]
 #[ORM\Index(name: 'idx_customer_organization_deleted', columns: ['organization_id', 'deleted_at'])]
 class Customer
 {

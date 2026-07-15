@@ -17,6 +17,8 @@ interface ReceivableRepository
 
     public function existsByExternalKey(Organization $organization, string $source, string $externalId, ?int $exceptId = null): bool;
 
+    public function findByExternalKey(Organization $organization, string $source, string $externalId, bool $forUpdate = false): ?Receivable;
+
     /** @return list<Receivable> */
     public function list(Organization $organization, ReceivableCriteria $criteria): array;
 

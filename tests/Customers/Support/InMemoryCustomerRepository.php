@@ -39,6 +39,28 @@ final class InMemoryCustomerRepository implements CustomerRepository
         return $customer;
     }
 
+    public function findByDocument(Organization $organization, string $document): ?Customer
+    {
+        foreach ($this->customers as $customer) {
+            if ($customer->organization() === $organization && $customer->document() === $document && null === $customer->deletedAt()) {
+                return $customer;
+            }
+        }
+
+        return null;
+    }
+
+    public function findByExternalId(Organization $organization, string $externalId): ?Customer
+    {
+        foreach ($this->customers as $customer) {
+            if ($customer->organization() === $organization && $customer->externalId() === $externalId && null === $customer->deletedAt()) {
+                return $customer;
+            }
+        }
+
+        return null;
+    }
+
     public function documentExists(Organization $organization, string $document, ?int $exceptCustomerId = null): bool
     {
         foreach ($this->customers as $customer) {
@@ -47,6 +69,17 @@ final class InMemoryCustomerRepository implements CustomerRepository
                 && $customer->document() === $document
                 && $customer->id() !== $exceptCustomerId
             ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public function externalIdExists(Organization $organization, string $externalId, ?int $exceptCustomerId = null): bool
+    {
+        foreach ($this->customers as $customer) {
+            if ($customer->organization() === $organization && $customer->externalId() === $externalId && $customer->id() !== $exceptCustomerId) {
                 return true;
             }
         }

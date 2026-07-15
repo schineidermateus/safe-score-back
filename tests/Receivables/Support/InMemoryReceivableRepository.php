@@ -56,6 +56,17 @@ final class InMemoryReceivableRepository implements ReceivableRepository
         return false;
     }
 
+    public function findByExternalKey(Organization $organization, string $source, string $externalId, bool $forUpdate = false): ?Receivable
+    {
+        foreach ($this->items as $receivable) {
+            if ($receivable->organization() === $organization && $receivable->source() === $source && $receivable->externalId() === $externalId) {
+                return $receivable;
+            }
+        }
+
+        return null;
+    }
+
     public function list(Organization $organization, ReceivableCriteria $criteria): array
     {
         $items = array_values(array_filter($this->items, fn (Receivable $receivable): bool => $this->matches($receivable, $organization, $criteria)));
