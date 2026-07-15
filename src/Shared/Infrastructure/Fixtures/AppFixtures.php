@@ -11,6 +11,8 @@ use App\Identity\Domain\Entity\User;
 use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
 use App\Organizations\Domain\Enum\MembershipRole;
+use App\Receivables\Domain\Entity\Receivable;
+use App\Receivables\Domain\ValueObject\ReceivableAmount;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
@@ -32,14 +34,17 @@ final class AppFixtures extends Fixture
             $manager->persist($entity);
         }
 
+        $baseCustomerA = Customer::create($organizationA, 'Cliente Organização A', 'Cliente A', '04252011000110', 'A-001', null, null, $now);
+        $baseCustomerB = Customer::create($organizationB, 'Cliente Organização B', 'Cliente B', '04252011000110', 'B-001', null, null, $now);
+
         foreach ([
             OrganizationMembership::join($organizationA, $owner, MembershipRole::Owner, $now),
             OrganizationMembership::join($organizationA, $admin, MembershipRole::Admin, $now),
             OrganizationMembership::join($organizationA, $analyst, MembershipRole::Analyst, $now),
             OrganizationMembership::join($organizationA, $viewer, MembershipRole::Viewer, $now),
             OrganizationMembership::join($organizationB, $secondOwner, MembershipRole::Owner, $now),
-            Customer::create($organizationA, 'Cliente Organização A', 'Cliente A', '04252011000110', 'A-001', null, null, $now),
-            Customer::create($organizationB, 'Cliente Organização B', 'Cliente B', '04252011000110', 'B-001', null, null, $now),
+            $baseCustomerA,
+            $baseCustomerB,
         ] as $entity) {
             $manager->persist($entity);
         }
@@ -110,6 +115,30 @@ final class AppFixtures extends Fixture
 
         foreach ([$activeLimit, $activeCustomerHistory, $expiredLimit, $revokedLimit, $otherTenantLimit] as $creditLimit) {
             $manager->persist($creditLimit);
+        }
+
+        $receivables = [
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'SHARED-001', 'OPEN-UPCOMING', new \DateTimeImmutable('2026-07-01'), new \DateTimeImmutable('2026-08-15'), new ReceivableAmount('1000.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'PARTIAL-001', 'PARTIALLY-PAID', new \DateTimeImmutable('2026-06-01'), new \DateTimeImmutable('2026-08-01'), new ReceivableAmount('2000.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'PAID-ONTIME', 'PAID-ONTIME', new \DateTimeImmutable('2026-05-01'), new \DateTimeImmutable('2026-06-30'), new ReceivableAmount('3000.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'PAID-LATE', 'PAID-LATE', new \DateTimeImmutable('2026-04-01'), new \DateTimeImmutable('2026-05-31'), new ReceivableAmount('4000.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'AGING-15', 'AGING-1-15', new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-07-05'), new ReceivableAmount('500.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'AGING-30', 'AGING-16-30', new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-06-20'), new ReceivableAmount('600.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'AGING-60', 'AGING-31-60', new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-05-20'), new ReceivableAmount('700.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'AGING-90', 'AGING-61-90', new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-04-20'), new ReceivableAmount('800.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'AGING-OVER-90', 'AGING-OVER-90', new \DateTimeImmutable('2025-01-01'), new \DateTimeImmutable('2026-01-01'), new ReceivableAmount('900.00'), $now),
+            Receivable::create($organizationA, $baseCustomerA, 'FIXTURE', 'CANCELLED-001', 'CANCELLED', new \DateTimeImmutable('2026-01-01'), new \DateTimeImmutable('2026-12-31'), new ReceivableAmount('100.00'), $now),
+            Receivable::create($organizationB, $baseCustomerB, 'FIXTURE', 'SHARED-001', 'SAME-KEY-OTHER-TENANT', new \DateTimeImmutable('2026-07-01'), new \DateTimeImmutable('2026-08-15'), new ReceivableAmount('1100.00'), $now),
+        ];
+        $payments = [
+            $receivables[1]->registerPayment(new ReceivableAmount('750.00'), new \DateTimeImmutable('2026-07-10'), $owner, $now),
+            $receivables[2]->registerPayment(new ReceivableAmount('3000.00'), new \DateTimeImmutable('2026-06-30'), $owner, $now),
+            $receivables[3]->registerPayment(new ReceivableAmount('1500.00'), new \DateTimeImmutable('2026-06-05'), $owner, $now),
+            $receivables[3]->registerPayment(new ReceivableAmount('2500.00'), new \DateTimeImmutable('2026-06-15'), $owner, $now),
+        ];
+        $receivables[9]->cancel($owner, 'Cenário de demonstração cancelado.', $now);
+        foreach ([...$receivables, ...$payments] as $entity) {
+            $manager->persist($entity);
         }
 
         $manager->flush();

@@ -48,7 +48,10 @@ final readonly class AuthorizationService
             AuthorizationAction::ManageCustomers,
             AuthorizationAction::CreditLimitRead,
             AuthorizationAction::CreditLimitWrite,
-            AuthorizationAction::ManageReceivables,
+            AuthorizationAction::ReceivableRead,
+            AuthorizationAction::ReceivableWrite,
+            AuthorizationAction::ReceivablePaymentRegister,
+            AuthorizationAction::ReceivableCancel,
             AuthorizationAction::ImportData,
             AuthorizationAction::ResolveAlerts,
             AuthorizationAction::RecalculateScore,
@@ -65,6 +68,7 @@ final readonly class AuthorizationService
             MembershipRole::Viewer => [
                 AuthorizationAction::ViewData,
                 AuthorizationAction::CreditLimitRead,
+                AuthorizationAction::ReceivableRead,
             ],
         };
     }

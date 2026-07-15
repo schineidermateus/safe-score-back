@@ -44,7 +44,10 @@ final class AuthorizationServiceTest extends TestCase
             AuthorizationAction::ManageCustomers,
             AuthorizationAction::CreditLimitRead,
             AuthorizationAction::CreditLimitWrite,
-            AuthorizationAction::ManageReceivables,
+            AuthorizationAction::ReceivableRead,
+            AuthorizationAction::ReceivableWrite,
+            AuthorizationAction::ReceivablePaymentRegister,
+            AuthorizationAction::ReceivableCancel,
             AuthorizationAction::ImportData,
             AuthorizationAction::ResolveAlerts,
             AuthorizationAction::RecalculateScore,
@@ -56,7 +59,7 @@ final class AuthorizationServiceTest extends TestCase
                     MembershipRole::Owner => true,
                     MembershipRole::Admin => in_array($action, [...$operational, AuthorizationAction::CreditLimitRevoke, AuthorizationAction::ManageMembers], true),
                     MembershipRole::Analyst => in_array($action, $operational, true),
-                    MembershipRole::Viewer => in_array($action, [AuthorizationAction::ViewData, AuthorizationAction::CreditLimitRead], true),
+                    MembershipRole::Viewer => in_array($action, [AuthorizationAction::ViewData, AuthorizationAction::CreditLimitRead, AuthorizationAction::ReceivableRead], true),
                 };
 
                 yield $role->value.' '.$action->value => [$role, $action, $allowed];
@@ -84,6 +87,7 @@ final class AuthorizationServiceTest extends TestCase
         yield 'analyst recalculates score' => [MembershipRole::Analyst, AuthorizationAction::RecalculateScore];
         yield 'viewer reads' => [MembershipRole::Viewer, AuthorizationAction::ViewData];
         yield 'viewer reads credit limits' => [MembershipRole::Viewer, AuthorizationAction::CreditLimitRead];
+        yield 'viewer reads receivables' => [MembershipRole::Viewer, AuthorizationAction::ReceivableRead];
         yield 'analyst writes credit limits' => [MembershipRole::Analyst, AuthorizationAction::CreditLimitWrite];
         yield 'admin revokes credit limits' => [MembershipRole::Admin, AuthorizationAction::CreditLimitRevoke];
     }
@@ -104,6 +108,7 @@ final class AuthorizationServiceTest extends TestCase
         yield 'viewer cannot recalculate score' => [MembershipRole::Viewer, AuthorizationAction::RecalculateScore];
         yield 'viewer cannot write credit limits' => [MembershipRole::Viewer, AuthorizationAction::CreditLimitWrite];
         yield 'analyst cannot revoke credit limits' => [MembershipRole::Analyst, AuthorizationAction::CreditLimitRevoke];
+        yield 'viewer cannot register payment' => [MembershipRole::Viewer, AuthorizationAction::ReceivablePaymentRegister];
     }
 
     public function testAdminCannotManageAnExistingOwner(): void
@@ -145,6 +150,27 @@ final class AuthorizationServiceTest extends TestCase
             AuthorizationAction::CreditLimitRead,
             AuthorizationAction::CreditLimitWrite,
             AuthorizationAction::CreditLimitRevoke,
+        ] as $action) {
+            try {
+                $service->assertGranted($action);
+                self::fail('Inactive membership must not grant '.$action->value.'.');
+            } catch (DomainException $exception) {
+                self::assertSame(403, $exception->statusCode());
+            }
+        }
+    }
+
+    public function testInactiveMembershipDeniesEveryReceivableCapability(): void
+    {
+        $context = $this->context(MembershipRole::Owner);
+        $context->currentMembership()->suspend(new \DateTimeImmutable());
+        $service = new AuthorizationService($context);
+
+        foreach ([
+            AuthorizationAction::ReceivableRead,
+            AuthorizationAction::ReceivableWrite,
+            AuthorizationAction::ReceivablePaymentRegister,
+            AuthorizationAction::ReceivableCancel,
         ] as $action) {
             try {
                 $service->assertGranted($action);

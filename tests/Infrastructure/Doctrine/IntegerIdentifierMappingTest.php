@@ -10,6 +10,8 @@ use App\Customers\Domain\Entity\Customer;
 use App\Identity\Domain\Entity\User;
 use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
+use App\Receivables\Domain\Entity\Receivable;
+use App\Receivables\Domain\Entity\ReceivablePayment;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ToOneOwningSideMapping;
@@ -23,7 +25,7 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
 
-        foreach ([User::class, Organization::class, OrganizationMembership::class, Customer::class, CreditLimit::class, AuditLog::class] as $class) {
+        foreach ([User::class, Organization::class, OrganizationMembership::class, Customer::class, CreditLimit::class, AuditLog::class, Receivable::class, ReceivablePayment::class] as $class) {
             $metadata = $entityManager->getClassMetadata($class);
             self::assertSame(['id'], $metadata->getIdentifierFieldNames());
             self::assertSame('integer', $metadata->getTypeOfField('id'));
@@ -40,6 +42,12 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
             [CreditLimit::class, 'approvedBy', User::class],
             [AuditLog::class, 'organization', Organization::class],
             [AuditLog::class, 'user', User::class],
+            [Receivable::class, 'organization', Organization::class],
+            [Receivable::class, 'customer', Customer::class],
+            [Receivable::class, 'cancelledBy', User::class],
+            [ReceivablePayment::class, 'organization', Organization::class],
+            [ReceivablePayment::class, 'receivable', Receivable::class],
+            [ReceivablePayment::class, 'createdBy', User::class],
         ] as [$class, $association, $target]) {
             $mapping = $entityManager->getClassMetadata($class)->getAssociationMapping($association);
             self::assertInstanceOf(ToOneOwningSideMapping::class, $mapping);
@@ -69,5 +77,21 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
             ['organization_id'],
             $auditLogMetadata->table['indexes']['idx_audit_organization']['columns'] ?? null,
         );
+
+        $receivableMetadata = $entityManager->getClassMetadata(Receivable::class);
+        self::assertSame(
+            ['organization_id', 'source', 'external_id'],
+            $receivableMetadata->table['uniqueConstraints']['uniq_receivable_org_source_external']['columns'] ?? null,
+        );
+        foreach (['originalAmount', 'openAmount', 'paidAmount'] as $field) {
+            $mapping = $receivableMetadata->getFieldMapping($field);
+            self::assertSame('decimal', $mapping->type);
+            self::assertSame(19, $mapping->precision);
+            self::assertSame(2, $mapping->scale);
+        }
+        $paymentAmount = $entityManager->getClassMetadata(ReceivablePayment::class)->getFieldMapping('amount');
+        self::assertSame('decimal', $paymentAmount->type);
+        self::assertSame(19, $paymentAmount->precision);
+        self::assertSame(2, $paymentAmount->scale);
     }
 }

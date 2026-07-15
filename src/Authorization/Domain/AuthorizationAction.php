@@ -11,7 +11,10 @@ enum AuthorizationAction: string
     case CreditLimitRead = 'CREDIT_LIMIT_READ';
     case CreditLimitWrite = 'CREDIT_LIMIT_WRITE';
     case CreditLimitRevoke = 'CREDIT_LIMIT_REVOKE';
-    case ManageReceivables = 'MANAGE_RECEIVABLES';
+    case ReceivableRead = 'RECEIVABLE_READ';
+    case ReceivableWrite = 'RECEIVABLE_WRITE';
+    case ReceivablePaymentRegister = 'RECEIVABLE_PAYMENT_REGISTER';
+    case ReceivableCancel = 'RECEIVABLE_CANCEL';
     case ImportData = 'IMPORT_DATA';
     case ResolveAlerts = 'RESOLVE_ALERTS';
     case RecalculateScore = 'RECALCULATE_SCORE';

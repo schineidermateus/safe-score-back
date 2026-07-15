@@ -22,6 +22,12 @@ services:
         alias: App\Credit\Infrastructure\Persistence\Doctrine\DoctrineCreditLimitRepository
     App\Credit\Domain\Service\ActiveCreditLimitResolverInterface:
         alias: App\Credit\Application\Service\ActiveCreditLimitResolver
+    App\Receivables\Domain\Repository\ReceivableRepository:
+        alias: App\Receivables\Infrastructure\Persistence\Doctrine\DoctrineReceivableRepository
+    App\Receivables\Domain\Repository\ReceivablePaymentRepository:
+        alias: App\Receivables\Infrastructure\Persistence\Doctrine\DoctrineReceivablePaymentRepository
+    App\Receivables\Domain\Service\ReceivableStatusResolverInterface:
+        alias: App\Receivables\Application\Service\ReceivableStatusResolver
     App\Audit\Domain\Repository\AuditLogRepository:
         alias: App\Audit\Infrastructure\Persistence\Doctrine\DoctrineAuditLogRepository
     App\Shared\Application\Transaction\TransactionManagerInterface:
@@ -33,6 +39,11 @@ services:
             $decorated: '@.inner'
 
     App\Credit\Infrastructure\OpenApi\CreditLimitOpenApiFactory:
+        decorates: 'api_platform.openapi.factory'
+        arguments:
+            $decorated: '@.inner'
+
+    App\Receivables\Infrastructure\OpenApi\ReceivableOpenApiFactory:
         decorates: 'api_platform.openapi.factory'
         arguments:
             $decorated: '@.inner'

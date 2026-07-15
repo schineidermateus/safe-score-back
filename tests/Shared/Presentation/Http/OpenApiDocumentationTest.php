@@ -75,5 +75,27 @@ final class OpenApiDocumentationTest extends WebTestCase
         self::assertSame('string', $creditCreateSchema['properties']['amount']['type'] ?? null);
         self::assertSame('string', $creditOutput['amount']['type'] ?? null);
         self::assertArrayNotHasKey('organization_id', $creditOutput);
+
+        $receivables = $document['paths']['/api/v1/receivables'] ?? null;
+        $receivable = $document['paths']['/api/v1/receivables/{id}'] ?? null;
+        $payments = $document['paths']['/api/v1/receivables/{id}/payments'] ?? null;
+        $cancel = $document['paths']['/api/v1/receivables/{id}/cancel'] ?? null;
+        self::assertIsArray($receivables);
+        self::assertIsArray($receivable);
+        self::assertIsArray($payments);
+        self::assertIsArray($cancel);
+        self::assertArrayHasKey('get', $receivables);
+        self::assertArrayHasKey('post', $receivables);
+        self::assertArrayHasKey('get', $receivable);
+        self::assertArrayHasKey('patch', $receivable);
+        self::assertArrayHasKey('post', $payments);
+        self::assertArrayHasKey('post', $cancel);
+        $receivableInput = $receivables['post']['requestBody']['content']['application/json']['schema'] ?? [];
+        self::assertFalse($receivableInput['additionalProperties'] ?? true);
+        self::assertArrayNotHasKey('organization_id', $receivableInput['properties'] ?? []);
+        self::assertSame('string', $receivableInput['properties']['original_amount']['type'] ?? null);
+        $paymentAmount = $payments['post']['requestBody']['content']['application/json']['schema']['properties']['amount'] ?? [];
+        self::assertSame('string', $paymentAmount['type'] ?? null);
+        self::assertSame('^(?:(?:[1-9]\\d{0,16})(?:\\.\\d{1,2})?|0\\.(?:0[1-9]|[1-9]\\d))$', $paymentAmount['pattern'] ?? null);
     }
 }
