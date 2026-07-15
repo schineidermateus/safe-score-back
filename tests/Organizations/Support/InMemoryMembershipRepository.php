@@ -60,4 +60,8 @@ final class InMemoryMembershipRepository implements OrganizationMembershipReposi
                 && $membership->grantsAccess(),
         ));
     }
+
+    public function lockActiveOwners(Organization $organization): void
+    {
+    }
 }

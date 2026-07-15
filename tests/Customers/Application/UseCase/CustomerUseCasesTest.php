@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Customers\Application\UseCase;
 
+use App\Authorization\Application\AuthorizationService;
 use App\Customers\Application\DTO\CreateCustomerInput;
 use App\Customers\Application\DTO\ListCustomersInput;
 use App\Customers\Application\DTO\UpdateCustomerInput;
@@ -28,17 +29,17 @@ final class CustomerUseCasesTest extends TestCase
         $repository = new InMemoryCustomerRepository();
         [$organizationA, $contextA] = $this->context('A', 1);
         [, $contextB] = $this->context('B', 2);
-        $createA = new CreateCustomer($repository, $contextA);
+        $createA = new CreateCustomer($repository, $contextA, new AuthorizationService($contextA));
 
         $customer = $createA->execute(new CreateCustomerInput('Cliente A', document: '04.252.011/0001-10'));
 
         self::assertSame(1, $customer->id);
         self::assertIsInt($customer->id);
         self::assertSame($organizationA, $repository->findById($organizationA, $customer->id)?->organization());
-        self::assertSame($customer->id, (new GetCustomer($repository, $contextA))->execute($customer->id)->id);
+        self::assertSame($customer->id, (new GetCustomer($repository, $contextA, new AuthorizationService($contextA)))->execute($customer->id)->id);
 
         $this->expectException(DomainException::class);
-        (new GetCustomer($repository, $contextB))->execute($customer->id);
+        (new GetCustomer($repository, $contextB, new AuthorizationService($contextB)))->execute($customer->id);
     }
 
     public function testListAndUpdateAreIsolatedByCurrentOrganization(): void
@@ -46,15 +47,15 @@ final class CustomerUseCasesTest extends TestCase
         $repository = new InMemoryCustomerRepository();
         [, $contextA] = $this->context('A', 1);
         [, $contextB] = $this->context('B', 2);
-        $customerA = (new CreateCustomer($repository, $contextA))->execute(new CreateCustomerInput('Cliente A'));
-        $customerB = (new CreateCustomer($repository, $contextB))->execute(new CreateCustomerInput('Cliente B'));
+        $customerA = (new CreateCustomer($repository, $contextA, new AuthorizationService($contextA)))->execute(new CreateCustomerInput('Cliente A'));
+        $customerB = (new CreateCustomer($repository, $contextB, new AuthorizationService($contextB)))->execute(new CreateCustomerInput('Cliente B'));
 
-        $list = (new ListCustomers($repository, $contextA))->execute(new ListCustomersInput());
+        $list = (new ListCustomers($repository, $contextA, new AuthorizationService($contextA)))->execute(new ListCustomersInput());
         self::assertSame(1, $list->total);
         self::assertSame($customerA->id, $list->customers[0]->id);
 
         $this->expectException(DomainException::class);
-        (new UpdateCustomer($repository, $contextA))->execute(
+        (new UpdateCustomer($repository, $contextA, new AuthorizationService($contextA)))->execute(
             $customerB->id,
             new UpdateCustomerInput('Tentativa cross-tenant'),
         );
@@ -67,22 +68,32 @@ final class CustomerUseCasesTest extends TestCase
         [, $contextB] = $this->context('B', 2);
         $input = new CreateCustomerInput('Cliente', document: '04.252.011/0001-10');
 
-        (new CreateCustomer($repository, $contextA))->execute($input);
-        (new CreateCustomer($repository, $contextB))->execute($input);
+        (new CreateCustomer($repository, $contextA, new AuthorizationService($contextA)))->execute($input);
+        (new CreateCustomer($repository, $contextB, new AuthorizationService($contextB)))->execute($input);
 
         $this->expectException(DomainException::class);
-        (new CreateCustomer($repository, $contextA))->execute($input);
+        (new CreateCustomer($repository, $contextA, new AuthorizationService($contextA)))->execute($input);
+    }
+
+    public function testViewerCannotCreateCustomerEvenWhenUseCaseIsCalledDirectly(): void
+    {
+        $repository = new InMemoryCustomerRepository();
+        [, $viewerContext] = $this->context('viewer', 1, MembershipRole::Viewer);
+
+        $this->expectException(DomainException::class);
+        (new CreateCustomer($repository, $viewerContext, new AuthorizationService($viewerContext)))
+            ->execute(new CreateCustomerInput('Cliente não autorizado'));
     }
 
     /** @return array{Organization, CurrentContextStub} */
-    private function context(string $suffix, int $id): array
+    private function context(string $suffix, int $id, MembershipRole $role = MembershipRole::Owner): array
     {
         $now = new \DateTimeImmutable();
         $organization = Organization::create('Organization '.$suffix, null, null, $now);
         $user = User::create('User '.$suffix, mb_strtolower($suffix).'@example.com', $now);
         EntityId::assign($organization, $id);
         EntityId::assign($user, $id);
-        $membership = OrganizationMembership::join($organization, $user, MembershipRole::Owner, $now);
+        $membership = OrganizationMembership::join($organization, $user, $role, $now);
         EntityId::assign($membership, $id);
 
         return [$organization, new CurrentContextStub($user, $organization, $membership)];

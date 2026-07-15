@@ -15,6 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: 'organization_membership')]
 #[ORM\UniqueConstraint(name: 'uniq_membership_organization_user', columns: ['organization_id', 'user_id'])]
 #[ORM\Index(name: 'idx_membership_organization_status', columns: ['organization_id', 'status'])]
+#[ORM\Index(name: 'idx_membership_user', columns: ['user_id'])]
 class OrganizationMembership
 {
     #[ORM\Id]

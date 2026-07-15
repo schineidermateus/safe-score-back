@@ -9,6 +9,7 @@ use App\Organizations\Application\Context\CurrentOrganizationProviderInterface;
 use App\Organizations\Application\DTO\MembershipOutput;
 use App\Organizations\Domain\Enum\MembershipRole;
 use App\Organizations\Domain\Repository\OrganizationMembershipRepository;
+use App\Shared\Application\Transaction\TransactionManagerInterface;
 use App\Shared\Domain\Exception\DomainException;
 
 final readonly class SuspendMembership
@@ -17,23 +18,27 @@ final readonly class SuspendMembership
         private OrganizationMembershipRepository $memberships,
         private CurrentOrganizationProviderInterface $currentOrganization,
         private AuthorizationService $authorization,
+        private TransactionManagerInterface $transactions,
     ) {
     }
 
     public function execute(int $membershipId): MembershipOutput
     {
-        $organization = $this->currentOrganization->currentOrganization();
-        $membership = $this->memberships->findByIdAndOrganization($membershipId, $organization)
-            ?? throw new DomainException('MEMBERSHIP_NOT_FOUND', 'Vínculo não encontrado.', 404);
-        $this->authorization->assertCanManageMembership($membership);
+        return $this->transactions->transactional(function () use ($membershipId): MembershipOutput {
+            $organization = $this->currentOrganization->currentOrganization();
+            $this->memberships->lockActiveOwners($organization);
+            $membership = $this->memberships->findByIdAndOrganization($membershipId, $organization)
+                ?? throw new DomainException('MEMBERSHIP_NOT_FOUND', 'Vínculo não encontrado.', 404);
+            $this->authorization->assertCanManageMembership($membership);
 
-        if (MembershipRole::Owner === $membership->role() && $this->memberships->countActiveOwners($organization) <= 1) {
-            throw new DomainException('LAST_OWNER_REQUIRED', 'A organização deve manter ao menos um OWNER ativo.', 409);
-        }
+            if (MembershipRole::Owner === $membership->role() && $this->memberships->countActiveOwners($organization) <= 1) {
+                throw new DomainException('LAST_OWNER_REQUIRED', 'A organização deve manter ao menos um OWNER ativo.', 409);
+            }
 
-        $membership->suspend(new \DateTimeImmutable());
-        $this->memberships->save($membership);
+            $membership->suspend(new \DateTimeImmutable());
+            $this->memberships->save($membership);
 
-        return MembershipOutput::fromEntity($membership);
+            return MembershipOutput::fromEntity($membership);
+        });
     }
 }

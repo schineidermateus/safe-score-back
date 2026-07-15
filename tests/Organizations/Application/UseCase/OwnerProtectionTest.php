@@ -15,6 +15,7 @@ use App\Shared\Domain\Exception\DomainException;
 use App\Tests\Organizations\Support\InMemoryMembershipRepository;
 use App\Tests\Support\CurrentContextStub;
 use App\Tests\Support\EntityId;
+use App\Tests\Support\ImmediateTransactionManager;
 use PHPUnit\Framework\TestCase;
 
 final class OwnerProtectionTest extends TestCase
@@ -26,7 +27,7 @@ final class OwnerProtectionTest extends TestCase
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('A organização deve manter ao menos um OWNER ativo.');
 
-        (new ChangeMembershipRole($repository, $context, new AuthorizationService($context)))
+        (new ChangeMembershipRole($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager()))
             ->execute($membership->requireId(), MembershipRole::Admin);
     }
 
@@ -37,7 +38,7 @@ final class OwnerProtectionTest extends TestCase
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('A organização deve manter ao menos um OWNER ativo.');
 
-        (new SuspendMembership($repository, $context, new AuthorizationService($context)))
+        (new SuspendMembership($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager()))
             ->execute($membership->requireId());
     }
 

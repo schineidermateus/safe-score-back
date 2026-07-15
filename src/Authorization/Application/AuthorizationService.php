@@ -50,6 +50,7 @@ final readonly class AuthorizationService
             AuthorizationAction::ManageReceivables,
             AuthorizationAction::ImportData,
             AuthorizationAction::ResolveAlerts,
+            AuthorizationAction::RecalculateScore,
         ];
 
         return match ($role) {

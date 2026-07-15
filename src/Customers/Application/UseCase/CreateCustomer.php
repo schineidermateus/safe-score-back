@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Customers\Application\UseCase;
 
+use App\Authorization\Application\AuthorizationService;
+use App\Authorization\Domain\AuthorizationAction;
 use App\Customers\Application\DTO\CreateCustomerInput;
 use App\Customers\Application\DTO\CustomerOutput;
 use App\Customers\Domain\Entity\Customer;
@@ -16,11 +18,13 @@ final readonly class CreateCustomer
     public function __construct(
         private CustomerRepository $repository,
         private CurrentOrganizationProviderInterface $currentOrganization,
+        private AuthorizationService $authorization,
     ) {
     }
 
     public function execute(CreateCustomerInput $input): CustomerOutput
     {
+        $this->authorization->assertGranted(AuthorizationAction::ManageCustomers);
         $organization = $this->currentOrganization->currentOrganization();
         $document = CustomerDocument::normalize($input->document);
 

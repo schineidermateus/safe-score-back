@@ -12,6 +12,7 @@ enum AuthorizationAction: string
     case ManageReceivables = 'MANAGE_RECEIVABLES';
     case ImportData = 'IMPORT_DATA';
     case ResolveAlerts = 'RESOLVE_ALERTS';
+    case RecalculateScore = 'RECALCULATE_SCORE';
     case ManageMembers = 'MANAGE_MEMBERS';
     case AssignOwner = 'ASSIGN_OWNER';
 }

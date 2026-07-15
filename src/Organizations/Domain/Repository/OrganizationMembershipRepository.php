@@ -20,4 +20,6 @@ interface OrganizationMembershipRepository
     public function listByOrganization(Organization $organization): array;
 
     public function countActiveOwners(Organization $organization): int;
+
+    public function lockActiveOwners(Organization $organization): void;
 }
