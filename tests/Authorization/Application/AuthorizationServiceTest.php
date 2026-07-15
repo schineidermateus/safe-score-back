@@ -42,7 +42,8 @@ final class AuthorizationServiceTest extends TestCase
         $operational = [
             AuthorizationAction::ViewData,
             AuthorizationAction::ManageCustomers,
-            AuthorizationAction::ManageCredit,
+            AuthorizationAction::CreditLimitRead,
+            AuthorizationAction::CreditLimitWrite,
             AuthorizationAction::ManageReceivables,
             AuthorizationAction::ImportData,
             AuthorizationAction::ResolveAlerts,
@@ -53,9 +54,9 @@ final class AuthorizationServiceTest extends TestCase
             foreach (AuthorizationAction::cases() as $action) {
                 $allowed = match ($role) {
                     MembershipRole::Owner => true,
-                    MembershipRole::Admin => in_array($action, [...$operational, AuthorizationAction::ManageMembers], true),
+                    MembershipRole::Admin => in_array($action, [...$operational, AuthorizationAction::CreditLimitRevoke, AuthorizationAction::ManageMembers], true),
                     MembershipRole::Analyst => in_array($action, $operational, true),
-                    MembershipRole::Viewer => AuthorizationAction::ViewData === $action,
+                    MembershipRole::Viewer => in_array($action, [AuthorizationAction::ViewData, AuthorizationAction::CreditLimitRead], true),
                 };
 
                 yield $role->value.' '.$action->value => [$role, $action, $allowed];
@@ -82,6 +83,9 @@ final class AuthorizationServiceTest extends TestCase
         yield 'admin recalculates score' => [MembershipRole::Admin, AuthorizationAction::RecalculateScore];
         yield 'analyst recalculates score' => [MembershipRole::Analyst, AuthorizationAction::RecalculateScore];
         yield 'viewer reads' => [MembershipRole::Viewer, AuthorizationAction::ViewData];
+        yield 'viewer reads credit limits' => [MembershipRole::Viewer, AuthorizationAction::CreditLimitRead];
+        yield 'analyst writes credit limits' => [MembershipRole::Analyst, AuthorizationAction::CreditLimitWrite];
+        yield 'admin revokes credit limits' => [MembershipRole::Admin, AuthorizationAction::CreditLimitRevoke];
     }
 
     #[DataProvider('deniedActions')]
@@ -98,6 +102,8 @@ final class AuthorizationServiceTest extends TestCase
         yield 'analyst cannot manage members' => [MembershipRole::Analyst, AuthorizationAction::ManageMembers];
         yield 'viewer cannot alter customer' => [MembershipRole::Viewer, AuthorizationAction::ManageCustomers];
         yield 'viewer cannot recalculate score' => [MembershipRole::Viewer, AuthorizationAction::RecalculateScore];
+        yield 'viewer cannot write credit limits' => [MembershipRole::Viewer, AuthorizationAction::CreditLimitWrite];
+        yield 'analyst cannot revoke credit limits' => [MembershipRole::Analyst, AuthorizationAction::CreditLimitRevoke];
     }
 
     public function testAdminCannotManageAnExistingOwner(): void
@@ -127,6 +133,26 @@ final class AuthorizationServiceTest extends TestCase
 
         $this->expectException(DomainException::class);
         (new AuthorizationService($context))->assertGranted(AuthorizationAction::ViewData);
+    }
+
+    public function testInactiveMembershipDeniesEveryCreditLimitCapability(): void
+    {
+        $context = $this->context(MembershipRole::Owner);
+        $context->currentMembership()->suspend(new \DateTimeImmutable());
+        $service = new AuthorizationService($context);
+
+        foreach ([
+            AuthorizationAction::CreditLimitRead,
+            AuthorizationAction::CreditLimitWrite,
+            AuthorizationAction::CreditLimitRevoke,
+        ] as $action) {
+            try {
+                $service->assertGranted($action);
+                self::fail('Inactive membership must not grant '.$action->value.'.');
+            } catch (DomainException $exception) {
+                self::assertSame(403, $exception->statusCode());
+            }
+        }
     }
 
     /** @return iterable<string, array{MembershipStatus}> */

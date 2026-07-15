@@ -49,5 +49,31 @@ final class OpenApiDocumentationTest extends WebTestCase
             $collection['post']['responses']['201']['content']['application/json']['schema']['properties']['data']['properties']['id']['type'] ?? null,
         );
         self::assertStringNotContainsString('uuid', strtolower(json_encode([$collection, $item], \JSON_THROW_ON_ERROR)));
+
+        $creditCollection = $document['paths']['/api/v1/customers/{customerId}/credit-limits'] ?? null;
+        $activeCredit = $document['paths']['/api/v1/customers/{customerId}/credit-limits/active'] ?? null;
+        $creditItem = $document['paths']['/api/v1/credit-limits/{id}'] ?? null;
+        $creditRevoke = $document['paths']['/api/v1/credit-limits/{id}/revoke'] ?? null;
+        self::assertIsArray($creditCollection);
+        self::assertIsArray($activeCredit);
+        self::assertIsArray($creditItem);
+        self::assertIsArray($creditRevoke);
+        self::assertArrayHasKey('get', $creditCollection);
+        self::assertArrayHasKey('post', $creditCollection);
+        self::assertArrayHasKey('get', $activeCredit);
+        self::assertArrayHasKey('get', $creditItem);
+        self::assertArrayHasKey('patch', $creditItem);
+        self::assertArrayHasKey('post', $creditRevoke);
+
+        $creditCreateSchema = $creditCollection['post']['requestBody']['content']['application/json']['schema'] ?? [];
+        $creditOutput = $creditCollection['post']['responses']['201']['content']['application/json']['schema']['properties']['data']['properties'] ?? [];
+        self::assertIsArray($creditCreateSchema);
+        self::assertIsArray($creditOutput);
+        self::assertFalse($creditCreateSchema['additionalProperties'] ?? true);
+        self::assertArrayNotHasKey('organization_id', $creditCreateSchema['properties'] ?? []);
+        self::assertArrayNotHasKey('customer_id', $creditCreateSchema['properties'] ?? []);
+        self::assertSame('string', $creditCreateSchema['properties']['amount']['type'] ?? null);
+        self::assertSame('string', $creditOutput['amount']['type'] ?? null);
+        self::assertArrayNotHasKey('organization_id', $creditOutput);
     }
 }

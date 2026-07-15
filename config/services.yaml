@@ -18,10 +18,21 @@ services:
         alias: App\Organizations\Infrastructure\Persistence\Doctrine\DoctrineOrganizationMembershipRepository
     App\Customers\Domain\Repository\CustomerRepository:
         alias: App\Customers\Infrastructure\Persistence\Doctrine\DoctrineCustomerRepository
+    App\Credit\Domain\Repository\CreditLimitRepository:
+        alias: App\Credit\Infrastructure\Persistence\Doctrine\DoctrineCreditLimitRepository
+    App\Credit\Domain\Service\ActiveCreditLimitResolverInterface:
+        alias: App\Credit\Application\Service\ActiveCreditLimitResolver
+    App\Audit\Domain\Repository\AuditLogRepository:
+        alias: App\Audit\Infrastructure\Persistence\Doctrine\DoctrineAuditLogRepository
     App\Shared\Application\Transaction\TransactionManagerInterface:
         alias: App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionManager
 
     App\Customers\Infrastructure\OpenApi\CustomerOpenApiFactory:
+        decorates: 'api_platform.openapi.factory'
+        arguments:
+            $decorated: '@.inner'
+
+    App\Credit\Infrastructure\OpenApi\CreditLimitOpenApiFactory:
         decorates: 'api_platform.openapi.factory'
         arguments:
             $decorated: '@.inner'

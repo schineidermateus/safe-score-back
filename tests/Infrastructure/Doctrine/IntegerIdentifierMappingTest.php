@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Infrastructure\Doctrine;
 
+use App\Audit\Domain\Entity\AuditLog;
+use App\Credit\Domain\Entity\CreditLimit;
 use App\Customers\Domain\Entity\Customer;
 use App\Identity\Domain\Entity\User;
 use App\Organizations\Domain\Entity\Organization;
@@ -21,7 +23,7 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
         self::assertInstanceOf(EntityManagerInterface::class, $entityManager);
 
-        foreach ([User::class, Organization::class, OrganizationMembership::class, Customer::class] as $class) {
+        foreach ([User::class, Organization::class, OrganizationMembership::class, Customer::class, CreditLimit::class, AuditLog::class] as $class) {
             $metadata = $entityManager->getClassMetadata($class);
             self::assertSame(['id'], $metadata->getIdentifierFieldNames());
             self::assertSame('integer', $metadata->getTypeOfField('id'));
@@ -33,6 +35,11 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
             [OrganizationMembership::class, 'organization', Organization::class],
             [OrganizationMembership::class, 'user', User::class],
             [Customer::class, 'organization', Organization::class],
+            [CreditLimit::class, 'organization', Organization::class],
+            [CreditLimit::class, 'customer', Customer::class],
+            [CreditLimit::class, 'approvedBy', User::class],
+            [AuditLog::class, 'organization', Organization::class],
+            [AuditLog::class, 'user', User::class],
         ] as [$class, $association, $target]) {
             $mapping = $entityManager->getClassMetadata($class)->getAssociationMapping($association);
             self::assertInstanceOf(ToOneOwningSideMapping::class, $mapping);
@@ -50,6 +57,17 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
         self::assertSame(
             ['organization_id', 'document'],
             $customerMetadata->table['uniqueConstraints']['uniq_customer_organization_document']['columns'] ?? null,
+        );
+
+        $creditLimitMetadata = $entityManager->getClassMetadata(CreditLimit::class);
+        self::assertSame(
+            ['organization_id'],
+            $creditLimitMetadata->table['indexes']['idx_credit_limit_organization']['columns'] ?? null,
+        );
+        $auditLogMetadata = $entityManager->getClassMetadata(AuditLog::class);
+        self::assertSame(
+            ['organization_id'],
+            $auditLogMetadata->table['indexes']['idx_audit_organization']['columns'] ?? null,
         );
     }
 }

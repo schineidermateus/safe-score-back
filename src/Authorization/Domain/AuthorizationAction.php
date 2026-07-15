@@ -8,7 +8,9 @@ enum AuthorizationAction: string
 {
     case ViewData = 'VIEW_DATA';
     case ManageCustomers = 'MANAGE_CUSTOMERS';
-    case ManageCredit = 'MANAGE_CREDIT';
+    case CreditLimitRead = 'CREDIT_LIMIT_READ';
+    case CreditLimitWrite = 'CREDIT_LIMIT_WRITE';
+    case CreditLimitRevoke = 'CREDIT_LIMIT_REVOKE';
     case ManageReceivables = 'MANAGE_RECEIVABLES';
     case ImportData = 'IMPORT_DATA';
     case ResolveAlerts = 'RESOLVE_ALERTS';

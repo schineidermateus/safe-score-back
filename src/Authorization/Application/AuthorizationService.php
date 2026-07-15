@@ -46,7 +46,8 @@ final readonly class AuthorizationService
         $operational = [
             AuthorizationAction::ViewData,
             AuthorizationAction::ManageCustomers,
-            AuthorizationAction::ManageCredit,
+            AuthorizationAction::CreditLimitRead,
+            AuthorizationAction::CreditLimitWrite,
             AuthorizationAction::ManageReceivables,
             AuthorizationAction::ImportData,
             AuthorizationAction::ResolveAlerts,
@@ -55,9 +56,16 @@ final readonly class AuthorizationService
 
         return match ($role) {
             MembershipRole::Owner => [...AuthorizationAction::cases()],
-            MembershipRole::Admin => [...$operational, AuthorizationAction::ManageMembers],
+            MembershipRole::Admin => [
+                ...$operational,
+                AuthorizationAction::CreditLimitRevoke,
+                AuthorizationAction::ManageMembers,
+            ],
             MembershipRole::Analyst => $operational,
-            MembershipRole::Viewer => [AuthorizationAction::ViewData],
+            MembershipRole::Viewer => [
+                AuthorizationAction::ViewData,
+                AuthorizationAction::CreditLimitRead,
+            ],
         };
     }
 }
