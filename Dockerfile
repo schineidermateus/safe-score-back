@@ -3,6 +3,7 @@ FROM php:8.4-fpm-bookworm AS base
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git libfcgi-bin libicu-dev libzip-dev unzip \
     && docker-php-ext-install -j"$(nproc)" bcmath intl opcache pdo_mysql zip \
+    && php -r 'if (!extension_loaded("bcmath") || !function_exists("bccomp")) { fwrite(STDERR, "BCMath extension installation failed.\n"); exit(1); }' \
     && rm -rf /var/lib/apt/lists/* \
     && sed -i 's|;ping.path = /ping|ping.path = /ping|' /usr/local/etc/php-fpm.d/www.conf \
     && sed -i 's|;clear_env = no|clear_env = no|' /usr/local/etc/php-fpm.d/www.conf
