@@ -29,6 +29,31 @@ make install
 make migrate
 ```
 
+## Documentação da API
+
+Com a infraestrutura local em execução, a documentação OpenAPI pode ser visualizada pela interface Swagger UI:
+
+- API direta: <http://api.safescore.local/api/docs>
+- Pelo host da aplicação: <http://app.safescore.local/api/docs>
+
+Para que esses endereços sejam resolvidos localmente, adicione as entradas abaixo ao arquivo `hosts` do sistema operacional:
+
+```text
+127.0.0.1 app.safescore.local
+127.0.0.1 api.safescore.local
+```
+
+No Windows, o arquivo está em `C:\Windows\System32\drivers\etc\hosts` e deve ser editado como administrador. No Linux e macOS, edite `/etc/hosts` com privilégios administrativos.
+
+Se `APP_HTTP_PORT` no arquivo `../safe-score-infra/.env` for diferente de `80`, informe a porta na URL, por exemplo `http://api.safescore.local:8080/api/docs`.
+
+O contrato OpenAPI em JSON está disponível em <http://api.safescore.local/api/docs.jsonopenapi>. Também é possível exportá-lo pelo console:
+
+```bash
+make console cmd="api:openapi:export"
+make console cmd="api:openapi:export --yaml"
+```
+
 Testes e qualidade:
 
 ```bash
