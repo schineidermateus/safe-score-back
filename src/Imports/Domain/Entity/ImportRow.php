@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DoctrineImportRowRepository::class)]
 #[ORM\Table(name: 'import_rows')]
-#[ORM\UniqueConstraint(name: 'uniq_import_row_batch_number', columns: ['import_batch_id', 'row_number'])]
+#[ORM\UniqueConstraint(name: 'uniq_import_row_batch_number', columns: ['import_batch_id', 'line_number'])]
 #[ORM\Index(name: 'idx_import_row_batch_status', columns: ['import_batch_id', 'status'])]
 class ImportRow
 {
@@ -25,7 +25,7 @@ class ImportRow
     #[ORM\JoinColumn(name: 'import_batch_id', nullable: false, onDelete: 'CASCADE', options: ['unsigned' => true])]
     private ImportBatch $batch;
 
-    #[ORM\Column(name: 'row_number', type: Types::INTEGER, options: ['unsigned' => true])]
+    #[ORM\Column(name: 'line_number', type: Types::INTEGER, options: ['unsigned' => true])]
     private int $rowNumber;
 
     /** @var array<string, string|null> */

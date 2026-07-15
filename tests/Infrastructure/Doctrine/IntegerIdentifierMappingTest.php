@@ -78,7 +78,7 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
 
         $rowMetadata = $entityManager->getClassMetadata(ImportRow::class);
         self::assertSame(
-            ['import_batch_id', 'row_number'],
+            ['import_batch_id', 'line_number'],
             $rowMetadata->table['uniqueConstraints']['uniq_import_row_batch_number']['columns'] ?? null,
         );
 
