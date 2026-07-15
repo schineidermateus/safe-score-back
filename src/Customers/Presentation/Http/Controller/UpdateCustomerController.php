@@ -18,8 +18,11 @@ final readonly class UpdateCustomerController
     }
 
     #[Route('/api/v1/customers/{id}', name: 'customers_update', requirements: ['id' => '\\d+'], methods: ['PATCH'])]
-    public function __invoke(int $id, #[MapRequestPayload] UpdateCustomerInput $input): JsonResponse
-    {
+    public function __invoke(
+        int $id,
+        #[MapRequestPayload(serializationContext: ['allow_extra_attributes' => false])]
+        UpdateCustomerInput $input,
+    ): JsonResponse {
         return ApiResponseFactory::success($this->updateCustomer->execute($id, $input)->toArray());
     }
 }

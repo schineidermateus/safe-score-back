@@ -21,6 +21,11 @@ services:
     App\Shared\Application\Transaction\TransactionManagerInterface:
         alias: App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionManager
 
+    App\Customers\Infrastructure\OpenApi\CustomerOpenApiFactory:
+        decorates: 'api_platform.openapi.factory'
+        arguments:
+            $decorated: '@.inner'
+
     App\Identity\Application\Context\CurrentUserProviderInterface:
         alias: App\Identity\Infrastructure\Context\UnavailableCurrentUserProvider
     App\Organizations\Application\Context\CurrentOrganizationProviderInterface:

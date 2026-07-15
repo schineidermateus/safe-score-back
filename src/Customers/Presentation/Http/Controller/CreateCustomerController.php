@@ -18,8 +18,10 @@ final readonly class CreateCustomerController
     }
 
     #[Route('/api/v1/customers', name: 'customers_create', methods: ['POST'])]
-    public function __invoke(#[MapRequestPayload] CreateCustomerInput $input): JsonResponse
-    {
+    public function __invoke(
+        #[MapRequestPayload(serializationContext: ['allow_extra_attributes' => false])]
+        CreateCustomerInput $input,
+    ): JsonResponse {
         $customer = $this->createCustomer->execute($input);
 
         return ApiResponseFactory::success($customer->toArray(), status: 201);

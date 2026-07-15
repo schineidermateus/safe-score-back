@@ -50,7 +50,7 @@ final readonly class UpdateCustomer
             CustomerStatus::from($input->status),
             new \DateTimeImmutable(),
         );
-        $this->repository->save($customer);
+        $this->repository->save($organization, $customer);
 
         return CustomerOutput::fromEntity($customer);
     }

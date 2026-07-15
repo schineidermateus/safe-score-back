@@ -10,7 +10,7 @@ use App\Organizations\Domain\Entity\Organization;
 
 interface CustomerRepository
 {
-    public function save(Customer $customer): void;
+    public function save(Organization $organization, Customer $customer): void;
 
     public function findById(Organization $organization, int $customerId): ?Customer;
 

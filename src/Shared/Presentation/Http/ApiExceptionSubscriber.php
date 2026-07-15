@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 
 #[AsEventListener(event: 'kernel.exception')]
 final readonly class ApiExceptionSubscriber
@@ -29,6 +30,14 @@ final readonly class ApiExceptionSubscriber
                     $exception->field(),
                 ),
             ], $exception->statusCode()));
+
+            return;
+        }
+
+        if ($exception instanceof ExtraAttributesException) {
+            $event->setResponse(ApiResponseFactory::error([
+                new ApiError('BAD_REQUEST', 'O payload contém campos não permitidos.'),
+            ], 400));
 
             return;
         }

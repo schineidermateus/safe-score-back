@@ -24,8 +24,12 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
         parent::__construct($registry, Customer::class);
     }
 
-    public function save(Customer $customer): void
+    public function save(Organization $organization, Customer $customer): void
     {
+        if ($customer->organization() !== $organization) {
+            throw new DomainException('CUSTOMER_TENANT_MISMATCH', 'Cliente não pertence à organização atual.', 403);
+        }
+
         $entityManager = $this->getEntityManager();
         $entityManager->persist($customer);
 

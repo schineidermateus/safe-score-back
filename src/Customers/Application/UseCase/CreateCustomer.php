@@ -42,7 +42,7 @@ final readonly class CreateCustomer
             $input->accountManager,
             new \DateTimeImmutable(),
         );
-        $this->repository->save($customer);
+        $this->repository->save($organization, $customer);
 
         return CustomerOutput::fromEntity($customer);
     }

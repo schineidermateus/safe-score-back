@@ -22,8 +22,9 @@ final readonly class DeleteCustomer
     public function execute(int $customerId): void
     {
         $this->authorization->assertGranted(AuthorizationAction::ManageCustomers);
+        $organization = $this->currentOrganization->currentOrganization();
         $customer = $this->repository->findById(
-            $this->currentOrganization->currentOrganization(),
+            $organization,
             $customerId,
         );
 
@@ -32,6 +33,6 @@ final readonly class DeleteCustomer
         }
 
         $customer->delete(new \DateTimeImmutable());
-        $this->repository->save($customer);
+        $this->repository->save($organization, $customer);
     }
 }

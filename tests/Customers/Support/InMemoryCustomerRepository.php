@@ -16,8 +16,12 @@ final class InMemoryCustomerRepository implements CustomerRepository
     private array $customers = [];
     private int $nextId = 1;
 
-    public function save(Customer $customer): void
+    public function save(Organization $organization, Customer $customer): void
     {
+        if ($customer->organization() !== $organization) {
+            throw new \LogicException('Customer tenant mismatch.');
+        }
+
         if (null === $customer->id()) {
             EntityId::assign($customer, $this->nextId++);
         }

@@ -41,5 +41,15 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
             self::assertSame('id', $mapping->joinColumns[0]->referencedColumnName);
             self::assertTrue($mapping->joinColumns[0]->options['unsigned'] ?? false);
         }
+
+        $customerMetadata = $entityManager->getClassMetadata(Customer::class);
+        $organizationMapping = $customerMetadata->getAssociationMapping('organization');
+        self::assertInstanceOf(ToOneOwningSideMapping::class, $organizationMapping);
+        self::assertFalse($organizationMapping->joinColumns[0]->nullable);
+        self::assertSame('RESTRICT', $organizationMapping->joinColumns[0]->onDelete);
+        self::assertSame(
+            ['organization_id', 'document'],
+            $customerMetadata->table['uniqueConstraints']['uniq_customer_organization_document']['columns'] ?? null,
+        );
     }
 }
