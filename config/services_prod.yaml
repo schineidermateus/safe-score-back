@@ -1,0 +1,29 @@
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    # --- Validação do access token JWT --------------------------------------
+    App\Identity\Infrastructure\Security\Jwt\JwksClient:
+        arguments:
+            $jwksUri: '%env(JWKS_URI)%'
+            $cacheTtl: '%env(int:JWKS_CACHE_TTL)%'
+
+    App\Identity\Infrastructure\Security\Jwt\JwtTokenValidator:
+        arguments:
+            $issuer: '%env(JWT_ISSUER)%'
+            $audience: '%env(JWT_AUDIENCE)%'
+            $clockSkew: '%env(int:JWT_CLOCK_SKEW)%'
+
+    # --- Providers de contexto atual de produção (substituem os padrões que negam tudo) ---
+    App\Identity\Application\Context\AuthenticatedTokenProviderInterface:
+        alias: App\Identity\Infrastructure\Security\RequestAuthenticatedTokenProvider
+
+    App\Identity\Application\Context\CurrentUserProviderInterface:
+        alias: App\Identity\Infrastructure\Context\TokenCurrentUserProvider
+
+    App\Organizations\Application\Context\CurrentOrganizationProviderInterface:
+        alias: App\Organizations\Infrastructure\Context\TokenCurrentOrganizationProvider
+
+    App\Organizations\Application\Context\CurrentMembershipProviderInterface:
+        alias: App\Organizations\Infrastructure\Context\TokenCurrentMembershipProvider

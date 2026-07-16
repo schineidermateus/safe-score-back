@@ -39,6 +39,10 @@ when@test:
 
 when@prod:
     security:
+        firewalls:
+            api:
+                access_token:
+                    token_handler: App\Identity\Infrastructure\Security\JwtAccessTokenHandler
         access_control:
             - { path: ^/health$, roles: PUBLIC_ACCESS }
             - { path: ^/api/docs, roles: PUBLIC_ACCESS }
