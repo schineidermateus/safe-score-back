@@ -13,16 +13,28 @@ use App\Identity\Application\Context\AuthenticatedToken;
  */
 final readonly class JwtTokenValidator
 {
+    private const MAX_TOKEN_LENGTH = 16384;
+
     public function __construct(
         private JwksClient $jwks,
         private string $issuer,
         private string $audience,
         private int $clockSkew = 30,
     ) {
+        if ('' === trim($this->issuer) || '' === trim($this->audience)) {
+            throw new \InvalidArgumentException('Issuer e audience do JWT devem ser informados.');
+        }
+        if ($this->clockSkew < 0) {
+            throw new \InvalidArgumentException('A tolerância de relógio do JWT não pode ser negativa.');
+        }
     }
 
     public function validate(string $jwt): AuthenticatedToken
     {
+        if ('' === $jwt || strlen($jwt) > self::MAX_TOKEN_LENGTH) {
+            throw new JwtValidationException('JWT vazio ou acima do tamanho máximo permitido.');
+        }
+
         $segments = explode('.', $jwt);
         if (3 !== count($segments)) {
             throw new JwtValidationException('JWT malformado: eram esperados três segmentos.');
@@ -35,6 +47,9 @@ final readonly class JwtTokenValidator
 
         if ('RS256' !== ($header['alg'] ?? null)) {
             throw new JwtValidationException('Algoritmo de assinatura não suportado; RS256 é obrigatório.');
+        }
+        if (isset($header['typ']) && 'JWT' !== $header['typ']) {
+            throw new JwtValidationException('O tipo do token deve ser JWT.');
         }
 
         $kid = $header['kid'] ?? null;
@@ -56,17 +71,13 @@ final readonly class JwtTokenValidator
             throw new JwtValidationException('Falha na verificação da assinatura do JWT.');
         }
 
-        $this->assertClaims($payload);
-
-        $email = $payload['email'] ?? null;
-        if (!is_string($email) || '' === $email) {
-            throw new JwtValidationException('O JWT não contém o claim "email".');
-        }
+        [$issuer, $subject, $email, $organizationId] = $this->validatedClaims($payload);
 
         return new AuthenticatedToken(
+            issuer: $issuer,
+            subject: $subject,
             email: $email,
-            organizationId: isset($payload['organization_id']) ? (int) $payload['organization_id'] : null,
-            subject: isset($payload['sub']) ? (string) $payload['sub'] : null,
+            organizationId: $organizationId,
             roles: $this->extractRoles($payload),
             claims: $payload,
         );
@@ -74,29 +85,71 @@ final readonly class JwtTokenValidator
 
     /**
      * @param array<string, mixed> $payload
+     *
+     * @return array{string, string, string, int}
      */
-    private function assertClaims(array $payload): void
+    private function validatedClaims(array $payload): array
     {
         $now = time();
 
-        if (!isset($payload['exp'])) {
-            throw new JwtValidationException('O JWT não contém o claim "exp".');
-        }
-        if ($now > (int) $payload['exp'] + $this->clockSkew) {
+        $expiresAt = $this->integerClaim($payload, 'exp');
+        if ($now > $expiresAt + $this->clockSkew) {
             throw new JwtValidationException('O JWT está expirado.');
         }
-        if (isset($payload['nbf']) && $now + $this->clockSkew < (int) $payload['nbf']) {
+        if (isset($payload['nbf']) && $now + $this->clockSkew < $this->integerClaim($payload, 'nbf')) {
             throw new JwtValidationException('O JWT ainda não é válido.');
         }
-        if (($payload['iss'] ?? null) !== $this->issuer) {
+
+        $issuer = $this->nonEmptyStringClaim($payload, 'iss');
+        if ($issuer !== $this->issuer) {
             throw new JwtValidationException('Issuer do JWT inesperado.');
         }
 
         $audience = $payload['aud'] ?? null;
-        $audiences = is_array($audience) ? $audience : [$audience];
+        if (is_string($audience)) {
+            $audiences = [$audience];
+        } elseif (is_array($audience) && [] !== $audience && array_is_list($audience) && [] === array_filter($audience, static fn (mixed $value): bool => !is_string($value) || '' === $value)) {
+            $audiences = $audience;
+        } else {
+            throw new JwtValidationException('O claim "aud" deve ser uma string ou lista não vazia de strings.');
+        }
         if (!in_array($this->audience, $audiences, true)) {
             throw new JwtValidationException('Audience do JWT não corresponde.');
         }
+
+        $subject = $this->nonEmptyStringClaim($payload, 'sub');
+        $email = mb_strtolower(trim($this->nonEmptyStringClaim($payload, 'email')));
+        if (false === filter_var($email, \FILTER_VALIDATE_EMAIL)) {
+            throw new JwtValidationException('O claim "email" não contém um endereço válido.');
+        }
+        $organizationId = $this->integerClaim($payload, 'organization_id');
+        if ($organizationId < 1) {
+            throw new JwtValidationException('O claim "organization_id" deve ser um inteiro positivo.');
+        }
+
+        return [$issuer, $subject, $email, $organizationId];
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function integerClaim(array $payload, string $name): int
+    {
+        $value = $payload[$name] ?? null;
+        if (!is_int($value)) {
+            throw new JwtValidationException(sprintf('O claim "%s" deve ser um inteiro.', $name));
+        }
+
+        return $value;
+    }
+
+    /** @param array<string, mixed> $payload */
+    private function nonEmptyStringClaim(array $payload, string $name): string
+    {
+        $value = $payload[$name] ?? null;
+        if (!is_string($value) || '' === trim($value)) {
+            throw new JwtValidationException(sprintf('O claim "%s" deve ser uma string não vazia.', $name));
+        }
+
+        return trim($value);
     }
 
     /**
@@ -134,6 +187,10 @@ final readonly class JwtTokenValidator
 
     private function base64UrlDecode(string $input): string
     {
+        if ('' === $input || 1 !== preg_match('/^[A-Za-z0-9_-]+$/D', $input)) {
+            throw new JwtValidationException('Codificação base64url inválida no JWT.');
+        }
+
         $normalized = strtr($input, '-_', '+/');
         $remainder = strlen($normalized) % 4;
         if (0 !== $remainder) {

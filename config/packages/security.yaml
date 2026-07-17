@@ -14,6 +14,7 @@ security:
             stateless: true
             lazy: true
             provider: safe_score_users
+            user_checker: App\Identity\Infrastructure\Security\ProductionUserChecker
             entry_point: App\Identity\Infrastructure\Security\ApiAuthenticationEntryPoint
 
 when@dev:

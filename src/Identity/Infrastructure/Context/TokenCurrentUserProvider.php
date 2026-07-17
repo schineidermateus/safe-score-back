@@ -27,6 +27,9 @@ final readonly class TokenCurrentUserProvider implements CurrentUserProviderInte
         if (!$user instanceof User) {
             throw new DomainException('UNAUTHENTICATED', 'Autenticação necessária.', 401);
         }
+        if (!$user->isActive()) {
+            throw new DomainException('USER_INACTIVE', 'A conta do usuário não está ativa.', 403);
+        }
 
         return $user;
     }

@@ -9,6 +9,8 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 
 #[AsEventListener(event: 'kernel.exception')]
@@ -21,6 +23,10 @@ final readonly class ApiExceptionSubscriber
     public function __invoke(ExceptionEvent $event): void
     {
         $exception = $event->getThrowable();
+
+        if ($exception instanceof AuthenticationException || $exception instanceof AccessDeniedException) {
+            return;
+        }
 
         if ($exception instanceof DomainException) {
             $event->setResponse(ApiResponseFactory::error([
@@ -51,7 +57,9 @@ final readonly class ApiExceptionSubscriber
             return;
         }
 
-        $this->logger->error('Unhandled application exception.', [
+        $this->logger->error('Unhandled application exception: {exception_class}: {exception_message}', [
+            'exception_class' => $exception::class,
+            'exception_message' => $exception->getMessage(),
             'exception' => $exception,
         ]);
 

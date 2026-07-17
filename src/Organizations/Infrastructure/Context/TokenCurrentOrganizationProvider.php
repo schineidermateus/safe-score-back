@@ -26,7 +26,13 @@ final readonly class TokenCurrentOrganizationProvider implements CurrentOrganiza
     {
         $organizationId = $this->tokenProvider->current()->requireOrganizationId();
 
-        return $this->organizations->findById($organizationId)
+        $organization = $this->organizations->findById($organizationId)
             ?? throw new DomainException('CURRENT_ORGANIZATION_NOT_FOUND', 'Organização do token não encontrada.', 403);
+
+        if (!$organization->isActive()) {
+            throw new DomainException('ORGANIZATION_INACTIVE', 'A organização atual não está ativa.', 403);
+        }
+
+        return $organization;
     }
 }

@@ -31,14 +31,22 @@ final class JwkToPem
         $algorithm = "\x30\x0d\x06\x09\x2a\x86\x48\x86\xf7\x0d\x01\x01\x01\x05\x00";
         $subjectPublicKeyInfo = self::sequence($algorithm.self::bitString($rsaPublicKey));
 
-        return "-----BEGIN PUBLIC KEY-----\n"
+        $pem = "-----BEGIN PUBLIC KEY-----\n"
             .chunk_split(base64_encode($subjectPublicKeyInfo), 64, "\n")
             ."-----END PUBLIC KEY-----\n";
+
+        $publicKey = openssl_pkey_get_public($pem);
+        $details = false === $publicKey ? false : openssl_pkey_get_details($publicKey);
+        if (false === $details || \OPENSSL_KEYTYPE_RSA !== ($details['type'] ?? null) || ($details['bits'] ?? 0) < 2048) {
+            throw new JwtValidationException('A chave RSA do JWKS é inválida ou possui menos de 2048 bits.');
+        }
+
+        return $pem;
     }
 
     private static function decode(?string $value): string
     {
-        if (null === $value) {
+        if (null === $value || '' === $value || 1 !== preg_match('/^[A-Za-z0-9_-]+$/D', $value)) {
             return '';
         }
 
@@ -88,7 +96,7 @@ final class JwkToPem
 
         $bytes = '';
         while ($length > 0) {
-            $bytes = chr($length & 0xff).$bytes;
+            $bytes = chr($length & 0xFF).$bytes;
             $length >>= 8;
         }
 

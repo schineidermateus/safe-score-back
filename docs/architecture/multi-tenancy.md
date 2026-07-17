@@ -27,9 +27,9 @@ User
 - Consultas entre tenants devem retornar 403 ou 404 sem vazar existência.
 - Unicidades de negócio devem incluir `organization_id`.
 
-## Contexto temporário
+## Contexto da requisição
 
-Até o JWT existir:
+Os casos de uso dependem exclusivamente das interfaces:
 
 ```text
 CurrentUserProviderInterface
@@ -37,7 +37,12 @@ CurrentOrganizationProviderInterface
 CurrentMembershipProviderInterface
 ```
 
-Implementações de desenvolvimento podem usar:
+Em produção, as implementações dessas interfaces são alimentadas pelo JWT validado. O
+`organization_id` do token seleciona a organização, mas o acesso somente é concedido
+quando usuário, organização e membership estão ativos. Consulte
+[Autenticação](authentication.md) e [Autorização](authorization.md).
+
+Em desenvolvimento, implementações específicas podem usar:
 
 ```env
 DEV_USER_ID=1

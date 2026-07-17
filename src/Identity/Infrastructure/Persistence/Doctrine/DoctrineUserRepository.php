@@ -25,7 +25,11 @@ final class DoctrineUserRepository extends ServiceEntityRepository implements Us
 
         try {
             $this->getEntityManager()->flush();
-        } catch (UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException $exception) {
+            if (str_contains($exception->getMessage(), 'uniq_user_external_identity')) {
+                throw new DomainException('USER_EXTERNAL_IDENTITY_ALREADY_LINKED', 'A identidade externa já está vinculada a outro usuário.', 409);
+            }
+
             throw new DomainException('USER_EMAIL_ALREADY_EXISTS', 'Já existe um usuário com este e-mail.', 409, 'email');
         }
     }
@@ -38,5 +42,13 @@ final class DoctrineUserRepository extends ServiceEntityRepository implements Us
     public function findByEmail(string $email): ?User
     {
         return $this->findOneBy(['email' => mb_strtolower(trim($email))]);
+    }
+
+    public function findByExternalIdentity(string $issuer, string $subject): ?User
+    {
+        return $this->findOneBy([
+            'identityIssuer' => $issuer,
+            'externalSubject' => $subject,
+        ]);
     }
 }

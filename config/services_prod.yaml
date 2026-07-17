@@ -6,8 +6,10 @@ services:
     # --- Validação do access token JWT --------------------------------------
     App\Identity\Infrastructure\Security\Jwt\JwksClient:
         arguments:
+            $cache: '@cache.app'
             $jwksUri: '%env(JWKS_URI)%'
             $cacheTtl: '%env(int:JWKS_CACHE_TTL)%'
+            $refreshInterval: '%env(int:JWKS_REFRESH_INTERVAL)%'
 
     App\Identity\Infrastructure\Security\Jwt\JwtTokenValidator:
         arguments:

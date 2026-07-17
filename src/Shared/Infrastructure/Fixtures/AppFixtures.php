@@ -30,6 +30,10 @@ final class AppFixtures extends Fixture
         $viewer = User::create('Consulta', 'viewer@safescore.local', $now);
         $secondOwner = User::create('Owner Organização B', 'owner-b@safescore.local', $now);
 
+        foreach ([$owner, $admin, $analyst, $viewer, $secondOwner] as $fixtureUser) {
+            $fixtureUser->linkExternalIdentity('https://auth.safescore.local', 'fixture:'.$fixtureUser->email(), $now);
+        }
+
         foreach ([$organizationA, $organizationB, $owner, $admin, $analyst, $viewer, $secondOwner] as $entity) {
             $manager->persist($entity);
         }
@@ -146,6 +150,9 @@ final class AppFixtures extends Fixture
         $indicatorOtherOrganization = Organization::create('SafeScore Indicadores Tenant B LTDA', 'Fixtures Tenant B', '62492044000109', $indicatorNow);
         $indicatorOwner = User::create('Owner Fixtures Indicadores', 'indicators@safescore.local', $indicatorNow);
         $indicatorOtherOwner = User::create('Owner Fixtures Indicadores B', 'indicators-b@safescore.local', $indicatorNow);
+        foreach ([$indicatorOwner, $indicatorOtherOwner] as $fixtureUser) {
+            $fixtureUser->linkExternalIdentity('https://auth.safescore.local', 'fixture:'.$fixtureUser->email(), $indicatorNow);
+        }
         foreach ([$indicatorOrganization, $indicatorOtherOrganization, $indicatorOwner, $indicatorOtherOwner] as $entity) {
             $manager->persist($entity);
         }

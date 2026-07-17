@@ -86,4 +86,4 @@ A configuração atual do PHPUnit possui somente a suíte `Project Test Suite`, 
 
 O Doctrine gera nomes de migrations baseados em timestamp; o comando `make migration` não aceita um parâmetro `name` porque a versão instalada não oferece essa opção de forma nativa.
 
-Documentação funcional e técnica adicional está disponível em [`docs/README.md`](docs/README.md).
+Documentação funcional e técnica adicional está disponível em [`docs/README-DOCS.md`](docs/README-DOCS.md).

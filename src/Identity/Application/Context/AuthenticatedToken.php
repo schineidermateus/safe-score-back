@@ -19,9 +19,10 @@ final readonly class AuthenticatedToken
      * @param array<string, mixed> $claims
      */
     public function __construct(
+        public string $issuer,
+        public string $subject,
         public string $email,
-        public ?int $organizationId,
-        public ?string $subject = null,
+        public int $organizationId,
         public array $roles = [],
         public array $claims = [],
     ) {
@@ -29,7 +30,10 @@ final readonly class AuthenticatedToken
 
     public function requireOrganizationId(): int
     {
-        return $this->organizationId
-            ?? throw new DomainException('ORGANIZATION_CONTEXT_REQUIRED', 'O token não identifica uma organização.', 403);
+        if ($this->organizationId < 1) {
+            throw new DomainException('ORGANIZATION_CONTEXT_REQUIRED', 'O token não identifica uma organização válida.', 403);
+        }
+
+        return $this->organizationId;
     }
 }

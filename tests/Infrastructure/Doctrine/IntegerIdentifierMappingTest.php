@@ -76,6 +76,12 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
             $customerMetadata->table['uniqueConstraints']['uniq_customer_organization_external']['columns'] ?? null,
         );
 
+        $userMetadata = $entityManager->getClassMetadata(User::class);
+        self::assertSame(
+            ['identity_issuer', 'external_subject'],
+            $userMetadata->table['uniqueConstraints']['uniq_user_external_identity']['columns'] ?? null,
+        );
+
         $rowMetadata = $entityManager->getClassMetadata(ImportRow::class);
         self::assertSame(
             ['import_batch_id', 'line_number'],
