@@ -99,6 +99,11 @@ class Organization
         return $this->status;
     }
 
+    public function isActive(): bool
+    {
+        return OrganizationStatus::Active === $this->status;
+    }
+
     public function timezone(): string
     {
         return $this->timezone;

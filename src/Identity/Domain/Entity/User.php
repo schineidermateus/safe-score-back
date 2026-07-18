@@ -13,6 +13,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Entity(repositoryClass: DoctrineUserRepository::class)]
 #[ORM\Table(name: 'app_user')]
 #[ORM\UniqueConstraint(name: 'uniq_user_email', columns: ['email'])]
+#[ORM\UniqueConstraint(name: 'uniq_user_external_identity', columns: ['identity_issuer', 'external_subject'])]
 class User implements UserInterface
 {
     #[ORM\Id]
@@ -29,6 +30,12 @@ class User implements UserInterface
 
     #[ORM\Column(type: Types::STRING, length: 20, enumType: UserStatus::class)]
     private UserStatus $status;
+
+    #[ORM\Column(name: 'identity_issuer', type: Types::STRING, length: 255, nullable: true, options: ['collation' => 'utf8mb4_bin'])]
+    private ?string $identityIssuer = null;
+
+    #[ORM\Column(name: 'external_subject', type: Types::STRING, length: 255, nullable: true, options: ['collation' => 'utf8mb4_bin'])]
+    private ?string $externalSubject = null;
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
@@ -76,6 +83,28 @@ class User implements UserInterface
     public function status(): UserStatus
     {
         return $this->status;
+    }
+
+    public function isActive(): bool
+    {
+        return UserStatus::Active === $this->status;
+    }
+
+    public function linkExternalIdentity(string $issuer, string $subject, \DateTimeImmutable $now): void
+    {
+        $this->identityIssuer = self::required($issuer, 'Identity issuer');
+        $this->externalSubject = self::required($subject, 'External subject');
+        $this->updatedAt = $now;
+    }
+
+    public function identityIssuer(): ?string
+    {
+        return $this->identityIssuer;
+    }
+
+    public function externalSubject(): ?string
+    {
+        return $this->externalSubject;
     }
 
     public function createdAt(): \DateTimeImmutable

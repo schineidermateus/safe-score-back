@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
+use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 
 final class ApiExceptionSubscriberTest extends TestCase
 {
@@ -50,5 +51,24 @@ final class ApiExceptionSubscriberTest extends TestCase
             JSON,
             (string) $response->getContent(),
         );
+    }
+
+    public function testExtraPayloadAttributesAreMappedToBadRequestWithoutBeingExposed(): void
+    {
+        $kernel = $this->createMock(KernelInterface::class);
+        $event = new ExceptionEvent(
+            $kernel,
+            Request::create('/api/v1/customers'),
+            HttpKernelInterface::MAIN_REQUEST,
+            new ExtraAttributesException(['organization_id']),
+        );
+
+        (new ApiExceptionSubscriber(new NullLogger()))($event);
+
+        $response = $event->getResponse();
+        self::assertNotNull($response);
+        self::assertSame(400, $response->getStatusCode());
+        self::assertStringNotContainsString('organization_id', (string) $response->getContent());
+        self::assertStringContainsString('BAD_REQUEST', (string) $response->getContent());
     }
 }

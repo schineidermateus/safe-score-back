@@ -14,6 +14,7 @@ security:
             stateless: true
             lazy: true
             provider: safe_score_users
+            user_checker: App\Identity\Infrastructure\Security\ProductionUserChecker
             entry_point: App\Identity\Infrastructure\Security\ApiAuthenticationEntryPoint
 
 when@dev:
@@ -39,6 +40,10 @@ when@test:
 
 when@prod:
     security:
+        firewalls:
+            api:
+                access_token:
+                    token_handler: App\Identity\Infrastructure\Security\JwtAccessTokenHandler
         access_control:
             - { path: ^/health$, roles: PUBLIC_ACCESS }
             - { path: ^/api/docs, roles: PUBLIC_ACCESS }

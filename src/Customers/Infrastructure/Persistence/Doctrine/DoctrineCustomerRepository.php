@@ -24,15 +24,19 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
         parent::__construct($registry, Customer::class);
     }
 
-    public function save(Customer $customer): void
+    public function save(Organization $organization, Customer $customer): void
     {
+        if ($customer->organization() !== $organization) {
+            throw new DomainException('CUSTOMER_TENANT_MISMATCH', 'Cliente não pertence à organização atual.', 403);
+        }
+
         $entityManager = $this->getEntityManager();
         $entityManager->persist($customer);
 
         try {
             $entityManager->flush();
         } catch (UniqueConstraintViolationException) {
-            throw new DomainException('CUSTOMER_DOCUMENT_ALREADY_EXISTS', 'Já existe um cliente com este documento.', 409, 'document');
+            throw new DomainException('CUSTOMER_IDENTIFIER_ALREADY_EXISTS', 'Documento ou identificador externo já utilizado nesta organização.', 409);
         }
     }
 
@@ -46,6 +50,16 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
             ->setParameter('customerId', $customerId)
             ->getQuery()
             ->getOneOrNullResult();
+    }
+
+    public function findByDocument(Organization $organization, string $document): ?Customer
+    {
+        return $this->findActiveBy($organization, 'document', $document);
+    }
+
+    public function findByExternalId(Organization $organization, string $externalId): ?Customer
+    {
+        return $this->findActiveBy($organization, 'externalId', $externalId);
     }
 
     public function documentExists(
@@ -64,6 +78,21 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
             $queryBuilder
                 ->andWhere('customer.id != :exceptCustomerId')
                 ->setParameter('exceptCustomerId', $exceptCustomerId);
+        }
+
+        return (int) $queryBuilder->getQuery()->getSingleScalarResult() > 0;
+    }
+
+    public function externalIdExists(Organization $organization, string $externalId, ?int $exceptCustomerId = null): bool
+    {
+        $queryBuilder = $this->createQueryBuilder('customer')
+            ->select('COUNT(customer.id)')
+            ->andWhere('customer.organization = :organization')
+            ->andWhere('customer.externalId = :externalId')
+            ->setParameter('organization', $organization)
+            ->setParameter('externalId', $externalId);
+        if (null !== $exceptCustomerId) {
+            $queryBuilder->andWhere('customer.id != :exceptCustomerId')->setParameter('exceptCustomerId', $exceptCustomerId);
         }
 
         return (int) $queryBuilder->getQuery()->getSingleScalarResult() > 0;
@@ -102,6 +131,20 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
             ->getSingleScalarResult();
     }
 
+    public function listAll(Organization $organization): array
+    {
+        /** @var list<Customer> $customers */
+        $customers = $this->createQueryBuilder('customer')
+            ->andWhere('customer.organization = :organization')
+            ->andWhere('customer.deletedAt IS NULL')
+            ->setParameter('organization', $organization)
+            ->orderBy('customer.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $customers;
+    }
+
     private function filteredQuery(
         Organization $organization,
         ?string $search,
@@ -130,6 +173,17 @@ final class DoctrineCustomerRepository extends ServiceEntityRepository implement
         }
 
         return $queryBuilder;
+    }
+
+    private function findActiveBy(Organization $organization, string $field, string $value): ?Customer
+    {
+        return $this->createQueryBuilder('customer')
+            ->andWhere('customer.organization = :organization')
+            ->andWhere(sprintf('customer.%s = :value', $field))
+            ->andWhere('customer.deletedAt IS NULL')
+            ->setParameter('organization', $organization)
+            ->setParameter('value', $value)
+            ->getQuery()->getOneOrNullResult();
     }
 
     /**

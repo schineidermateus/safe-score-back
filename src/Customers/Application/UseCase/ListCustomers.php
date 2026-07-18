@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Customers\Application\UseCase;
 
+use App\Authorization\Application\AuthorizationService;
+use App\Authorization\Domain\AuthorizationAction;
 use App\Customers\Application\DTO\CustomerListOutput;
 use App\Customers\Application\DTO\CustomerOutput;
 use App\Customers\Application\DTO\ListCustomersInput;
@@ -16,11 +18,13 @@ final readonly class ListCustomers
     public function __construct(
         private CustomerRepository $repository,
         private CurrentOrganizationProviderInterface $currentOrganization,
+        private AuthorizationService $authorization,
     ) {
     }
 
     public function execute(ListCustomersInput $input): CustomerListOutput
     {
+        $this->authorization->assertGranted(AuthorizationAction::ViewData);
         $organization = $this->currentOrganization->currentOrganization();
         $status = null === $input->status ? null : CustomerStatus::from($input->status);
         $customers = $this->repository->list(

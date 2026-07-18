@@ -12,6 +12,7 @@ use App\Organizations\Domain\Entity\OrganizationMembership;
 use App\Organizations\Domain\Enum\MembershipRole;
 use App\Organizations\Domain\Repository\OrganizationMembershipRepository;
 use App\Organizations\Domain\Repository\OrganizationRepository;
+use App\Shared\Application\Transaction\TransactionManagerInterface;
 use App\Shared\Domain\Exception\DomainException;
 
 final readonly class CreateOrganization
@@ -20,33 +21,36 @@ final readonly class CreateOrganization
         private OrganizationRepository $organizations,
         private OrganizationMembershipRepository $memberships,
         private CurrentUserProviderInterface $currentUser,
+        private TransactionManagerInterface $transactions,
     ) {
     }
 
     public function execute(CreateOrganizationInput $input): OrganizationOutput
     {
-        $organization = Organization::create(
-            $input->legalName,
-            $input->tradeName,
-            $input->document,
-            new \DateTimeImmutable(),
-            $input->timezone,
-            $input->currency,
-        );
+        return $this->transactions->transactional(function () use ($input): OrganizationOutput {
+            $now = new \DateTimeImmutable();
+            $organization = Organization::create(
+                $input->legalName,
+                $input->tradeName,
+                $input->document,
+                $now,
+                $input->timezone,
+                $input->currency,
+            );
 
-        if (null !== $organization->document() && null !== $this->organizations->findByDocument($organization->document())) {
-            throw new DomainException('ORGANIZATION_DOCUMENT_ALREADY_EXISTS', 'Já existe uma organização com este documento.', 409, 'document');
-        }
+            if (null !== $organization->document() && null !== $this->organizations->findByDocument($organization->document())) {
+                throw new DomainException('ORGANIZATION_DOCUMENT_ALREADY_EXISTS', 'Já existe uma organização com este documento.', 409, 'document');
+            }
 
-        $this->organizations->save($organization);
-        $membership = OrganizationMembership::join(
-            $organization,
-            $this->currentUser->currentUser(),
-            MembershipRole::Owner,
-            new \DateTimeImmutable(),
-        );
-        $this->memberships->save($membership);
+            $this->organizations->save($organization);
+            $this->memberships->save(OrganizationMembership::join(
+                $organization,
+                $this->currentUser->currentUser(),
+                MembershipRole::Owner,
+                $now,
+            ));
 
-        return OrganizationOutput::fromEntity($organization);
+            return OrganizationOutput::fromEntity($organization);
+        });
     }
 }

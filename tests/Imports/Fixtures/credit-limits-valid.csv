@@ -1,0 +1,2 @@
+customer_external_id;amount;valid_from;valid_until;status;reason
+CUST-001;R$ 1.234,56;01/07/2026;31/12/2026;ACTIVE;Limite inicial

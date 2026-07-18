@@ -40,4 +40,15 @@ final class InMemoryUserRepository implements UserRepository
 
         return null;
     }
+
+    public function findByExternalIdentity(string $issuer, string $subject): ?User
+    {
+        foreach ($this->users as $user) {
+            if ($user->identityIssuer() === $issuer && $user->externalSubject() === $subject) {
+                return $user;
+            }
+        }
+
+        return null;
+    }
 }

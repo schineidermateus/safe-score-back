@@ -16,6 +16,7 @@ final class InMemoryMembershipRepository implements OrganizationMembershipReposi
     /** @var array<int, OrganizationMembership> */
     private array $memberships = [];
     private int $nextId = 1;
+    private int $activeOwnerLockCount = 0;
 
     public function save(OrganizationMembership $membership): void
     {
@@ -59,5 +60,15 @@ final class InMemoryMembershipRepository implements OrganizationMembershipReposi
                 && MembershipRole::Owner === $membership->role()
                 && $membership->grantsAccess(),
         ));
+    }
+
+    public function lockActiveOwners(Organization $organization): void
+    {
+        ++$this->activeOwnerLockCount;
+    }
+
+    public function activeOwnerLockCount(): int
+    {
+        return $this->activeOwnerLockCount;
     }
 }

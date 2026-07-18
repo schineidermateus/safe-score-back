@@ -10,15 +10,21 @@ use App\Organizations\Domain\Entity\Organization;
 
 interface CustomerRepository
 {
-    public function save(Customer $customer): void;
+    public function save(Organization $organization, Customer $customer): void;
 
     public function findById(Organization $organization, int $customerId): ?Customer;
+
+    public function findByDocument(Organization $organization, string $document): ?Customer;
+
+    public function findByExternalId(Organization $organization, string $externalId): ?Customer;
 
     public function documentExists(
         Organization $organization,
         string $document,
         ?int $exceptCustomerId = null,
     ): bool;
+
+    public function externalIdExists(Organization $organization, string $externalId, ?int $exceptCustomerId = null): bool;
 
     /**
      * @return list<Customer>
@@ -37,4 +43,7 @@ interface CustomerRepository
         ?string $search,
         ?CustomerStatus $status,
     ): int;
+
+    /** @return list<Customer> */
+    public function listAll(Organization $organization): array;
 }

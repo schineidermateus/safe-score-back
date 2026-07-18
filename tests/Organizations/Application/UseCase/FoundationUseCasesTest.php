@@ -22,6 +22,7 @@ use App\Tests\Organizations\Support\InMemoryMembershipRepository;
 use App\Tests\Organizations\Support\InMemoryOrganizationRepository;
 use App\Tests\Support\CurrentContextStub;
 use App\Tests\Support\EntityId;
+use App\Tests\Support\ImmediateTransactionManager;
 use PHPUnit\Framework\TestCase;
 
 final class FoundationUseCasesTest extends TestCase
@@ -52,7 +53,7 @@ final class FoundationUseCasesTest extends TestCase
                 return $this->user;
             }
         };
-        $useCase = new CreateOrganization($organizations, $memberships, $currentUser);
+        $useCase = new CreateOrganization($organizations, $memberships, $currentUser, new ImmediateTransactionManager());
         $useCase->execute(new CreateOrganizationInput('SafeScore A', document: '04.252.011/0001-10'));
 
         $created = $organizations->findById(1);
