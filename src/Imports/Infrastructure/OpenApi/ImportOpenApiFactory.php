@@ -24,6 +24,8 @@ final readonly class ImportOpenApiFactory implements OpenApiFactoryInterface
     {
         $openApi = ($this->decorated)($context);
         $paths = $openApi->getPaths();
+        $paths->addPath('/auth/me', new PathItem(get: new Operation(operationId: 'auth_me', tags: ['Identity'], responses: ['200' => new Response('Perfil e contexto atuais.'), '401' => new Response('Autenticação necessária.'), '403' => new Response('Contexto indisponível.')], summary: 'Retorna o perfil autenticado')));
+        $paths->addPath('/organizations', new PathItem(get: new Operation(operationId: 'organizations_accessible', tags: ['Organizations'], responses: ['200' => new Response('Organizações acessíveis.'), '401' => new Response('Autenticação necessária.')], summary: 'Lista organizações acessíveis')));
         $paths->addPath('/api/v1/imports', new PathItem(
             get: new Operation(operationId: 'imports_list', tags: ['Imports'], responses: $this->responses('Lotes paginados.'), summary: 'Lista lotes do tenant', parameters: $this->pagination()),
             post: new Operation(operationId: 'imports_create', tags: ['Imports'], responses: $this->responses('Lote criado.', 201), summary: 'Faz upload de CSV', description: 'Os tipos industriais são reservados e retornam IMPORT_TYPE_NOT_IMPLEMENTED até a respectiva spec.', requestBody: new RequestBody(content: new \ArrayObject(['multipart/form-data' => new MediaType(new \ArrayObject(['type' => 'object', 'required' => ['type', 'file'], 'properties' => ['type' => ['type' => 'string', 'enum' => ['BUSINESS_PARTNERS', 'MATERIALS', 'QUARRIES', 'STORAGE_LOCATIONS', 'BLOCKS', 'SLABS', 'LOTS', 'INVENTORY_OPENING', 'PRODUCTION_COSTS']], 'file' => ['type' => 'string', 'format' => 'binary']]]))]), required: true)),
@@ -48,7 +50,7 @@ final readonly class ImportOpenApiFactory implements OpenApiFactoryInterface
     /** @return list<Parameter> */
     private function id(): array
     {
-        return [new Parameter('id', 'path', required: true, schema: ['type' => 'integer', 'format' => 'int32', 'minimum' => 1])];
+        return [new Parameter('id', 'path', required: true, schema: ['type' => 'integer', 'format' => 'int64', 'minimum' => 1])];
     }
 
     /** @return list<Parameter> */
@@ -73,15 +75,15 @@ final readonly class ImportOpenApiFactory implements OpenApiFactoryInterface
     private function envelopeSchema(): array
     {
         $batch = ['type' => 'object', 'required' => ['id', 'type', 'status', 'file_name', 'file_hash', 'total_rows', 'valid_rows', 'success_rows', 'error_rows', 'skipped_rows'], 'properties' => [
-            'id' => ['type' => 'integer', 'format' => 'int32'], 'type' => ['type' => 'string', 'enum' => ['BUSINESS_PARTNERS', 'MATERIALS', 'QUARRIES', 'STORAGE_LOCATIONS', 'BLOCKS', 'SLABS', 'LOTS', 'INVENTORY_OPENING', 'PRODUCTION_COSTS']], 'status' => ['type' => 'string'],
+            'id' => ['type' => 'integer', 'format' => 'int64'], 'type' => ['type' => 'string', 'enum' => ['BUSINESS_PARTNERS', 'MATERIALS', 'QUARRIES', 'STORAGE_LOCATIONS', 'BLOCKS', 'SLABS', 'LOTS', 'INVENTORY_OPENING', 'PRODUCTION_COSTS']], 'status' => ['type' => 'string'],
             'file_name' => ['type' => 'string'], 'original_file_name' => ['type' => 'string'], 'file_hash' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'], 'file_size' => ['type' => 'integer'],
             'headers' => ['type' => 'array', 'items' => ['type' => 'string']], 'mapping' => ['type' => ['object', 'null'], 'additionalProperties' => ['type' => 'string']], 'encoding' => ['type' => 'string'], 'delimiter' => ['type' => 'string'],
             'total_rows' => ['type' => 'integer'], 'valid_rows' => ['type' => 'integer'], 'success_rows' => ['type' => 'integer'], 'error_rows' => ['type' => 'integer'], 'skipped_rows' => ['type' => 'integer'], 'failure_code' => ['type' => ['string', 'null']],
             'started_at' => ['type' => ['string', 'null'], 'format' => 'date-time'], 'completed_at' => ['type' => ['string', 'null'], 'format' => 'date-time'], 'created_at' => ['type' => 'string', 'format' => 'date-time'], 'updated_at' => ['type' => 'string', 'format' => 'date-time'],
         ]];
         $row = ['type' => 'object', 'required' => ['id', 'row_number', 'status', 'errors'], 'properties' => [
-            'id' => ['type' => 'integer', 'format' => 'int32'], 'row_number' => ['type' => 'integer'], 'raw_data' => ['type' => 'object', 'additionalProperties' => true], 'normalized_data' => ['type' => ['object', 'null'], 'additionalProperties' => true],
-            'status' => ['type' => 'string'], 'action' => ['type' => ['string', 'null'], 'enum' => ['CREATE', 'UPDATE', 'SKIP', 'ERROR', null]], 'errors' => ['type' => 'array', 'items' => ['type' => 'object']], 'entity_type' => ['type' => ['string', 'null']], 'entity_id' => ['type' => ['integer', 'null'], 'format' => 'int32'],
+            'id' => ['type' => 'integer', 'format' => 'int64'], 'row_number' => ['type' => 'integer'], 'raw_data' => ['type' => 'object', 'additionalProperties' => true], 'normalized_data' => ['type' => ['object', 'null'], 'additionalProperties' => true],
+            'status' => ['type' => 'string'], 'action' => ['type' => ['string', 'null'], 'enum' => ['CREATE', 'UPDATE', 'SKIP', 'ERROR', null]], 'errors' => ['type' => 'array', 'items' => ['type' => 'object']], 'entity_type' => ['type' => ['string', 'null']], 'entity_id' => ['type' => ['integer', 'null'], 'format' => 'int64'],
         ]];
 
         return ['type' => 'object', 'required' => ['data', 'meta', 'errors'], 'properties' => ['data' => ['oneOf' => [$batch, $row, ['type' => 'array', 'items' => ['oneOf' => [$batch, $row]]]]], 'meta' => ['type' => 'object'], 'errors' => ['type' => 'array']]];

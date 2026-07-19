@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Organizations\Application\UseCase;
 
+use App\Audit\Application\AuditLogger;
 use App\Authorization\Application\AuthorizationService;
+use App\Identity\Application\Context\CurrentUserProviderInterface;
 use App\Organizations\Application\Context\CurrentOrganizationProviderInterface;
 use App\Organizations\Application\DTO\MembershipOutput;
 use App\Organizations\Domain\Enum\MembershipRole;
@@ -19,6 +21,8 @@ final readonly class SuspendMembership
         private CurrentOrganizationProviderInterface $currentOrganization,
         private AuthorizationService $authorization,
         private TransactionManagerInterface $transactions,
+        private CurrentUserProviderInterface $currentUser,
+        private AuditLogger $audit,
     ) {
     }
 
@@ -35,8 +39,11 @@ final readonly class SuspendMembership
                 throw new DomainException('LAST_OWNER_REQUIRED', 'A organização deve manter ao menos um OWNER ativo.', 409);
             }
 
-            $membership->suspend(new \DateTimeImmutable());
+            $now = new \DateTimeImmutable();
+            $previousStatus = $membership->status();
+            $membership->suspend($now);
             $this->memberships->save($membership);
+            $this->audit->record($organization, $this->currentUser->currentUser(), 'MEMBERSHIP_SUSPENDED', 'OrganizationMembership', $membership->requireId(), ['status' => $previousStatus->value], ['status' => $membership->status()->value], null, $now);
 
             return MembershipOutput::fromEntity($membership);
         });

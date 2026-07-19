@@ -16,6 +16,7 @@ services:
             $issuer: '%env(JWT_ISSUER)%'
             $audience: '%env(JWT_AUDIENCE)%'
             $clockSkew: '%env(int:JWT_CLOCK_SKEW)%'
+            $tokenType: '%env(JWT_TOKEN_TYPE)%'
 
     # --- Providers de contexto atual de produção (substituem os padrões que negam tudo) ---
     App\Identity\Application\Context\AuthenticatedTokenProviderInterface:

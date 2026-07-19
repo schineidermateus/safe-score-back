@@ -8,11 +8,14 @@ use App\Audit\Domain\Entity\AuditLog;
 use App\Audit\Domain\Repository\AuditLogRepository;
 use App\Identity\Domain\Entity\User;
 use App\Organizations\Domain\Entity\Organization;
+use App\Shared\Application\Observability\CorrelationIdProviderInterface;
 
 final readonly class AuditLogger
 {
-    public function __construct(private AuditLogRepository $repository)
-    {
+    public function __construct(
+        private AuditLogRepository $repository,
+        private ?CorrelationIdProviderInterface $correlationIds = null,
+    ) {
     }
 
     /**
@@ -32,6 +35,7 @@ final readonly class AuditLogger
         \DateTimeImmutable $now,
         ?string $correlationId = null,
     ): void {
+        $correlationId ??= $this->correlationIds?->current();
         $this->repository->save(AuditLog::record(
             $organization,
             $user,

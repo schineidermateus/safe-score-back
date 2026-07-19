@@ -577,7 +577,7 @@ Nunca registrar:
 Princípios mínimos:
 
 - autenticação stateless;
-- senhas com hash seguro;
+- autenticação externa sem persistência de senha no backend;
 - validação de entrada;
 - autorização obrigatória;
 - isolamento por tenant;

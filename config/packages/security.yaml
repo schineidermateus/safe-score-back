@@ -1,19 +1,12 @@
 security:
-    providers:
-        platform_users:
-            entity:
-                class: App\Identity\Domain\Entity\User
-                property: email
-
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         api:
-            pattern: ^/api
+            pattern: ^/(api|auth|organizations)
             stateless: true
             lazy: true
-            provider: platform_users
             user_checker: App\Identity\Infrastructure\Security\ProductionUserChecker
             entry_point: App\Identity\Infrastructure\Security\ApiAuthenticationEntryPoint
 
@@ -27,6 +20,8 @@ when@dev:
             - { path: ^/health$, roles: PUBLIC_ACCESS }
             - { path: ^/api/docs, roles: PUBLIC_ACCESS }
             - { path: ^/api/v1, roles: PUBLIC_ACCESS }
+            - { path: ^/auth, roles: PUBLIC_ACCESS }
+            - { path: ^/organizations, roles: PUBLIC_ACCESS }
 
 when@test:
     security:
@@ -37,6 +32,8 @@ when@test:
             - { path: ^/health$, roles: PUBLIC_ACCESS }
             - { path: ^/api/docs, roles: PUBLIC_ACCESS }
             - { path: ^/api/v1, roles: PUBLIC_ACCESS }
+            - { path: ^/auth, roles: PUBLIC_ACCESS }
+            - { path: ^/organizations, roles: PUBLIC_ACCESS }
 
 when@prod:
     security:
@@ -44,8 +41,9 @@ when@prod:
             api:
                 access_token:
                     token_handler: App\Identity\Infrastructure\Security\JwtAccessTokenHandler
+                    failure_handler: App\Identity\Infrastructure\Security\ApiAuthenticationFailureHandler
         access_control:
             - { path: ^/health$, roles: PUBLIC_ACCESS }
             - { path: ^/api/docs, roles: PUBLIC_ACCESS }
-            - { path: ^/api/v1/auth, roles: PUBLIC_ACCESS }
+            - { path: ^/(auth|organizations), roles: ROLE_USER }
             - { path: ^/api/v1, roles: ROLE_USER }

@@ -45,6 +45,42 @@ final class DoctrineOrganizationMembershipRepository extends ServiceEntityReposi
         return $this->findOneBy(['organization' => $organization, 'user' => $user]);
     }
 
+    public function findActiveByUserAndOrganizationId(User $user, int $organizationId): ?OrganizationMembership
+    {
+        return $this->createQueryBuilder('membership')
+            ->innerJoin('membership.organization', 'organization')
+            ->andWhere('membership.user = :user')
+            ->andWhere('organization.id = :organizationId')
+            ->andWhere('membership.status = :membershipStatus')
+            ->andWhere('organization.status = :organizationStatus')
+            ->setParameter('user', $user)
+            ->setParameter('organizationId', $organizationId)
+            ->setParameter('membershipStatus', MembershipStatus::Active)
+            ->setParameter('organizationStatus', \App\Organizations\Domain\Enum\OrganizationStatus::Active)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function listAccessibleByUser(User $user): array
+    {
+        /** @var list<OrganizationMembership> $memberships */
+        $memberships = $this->createQueryBuilder('membership')
+            ->innerJoin('membership.organization', 'organization')
+            ->addSelect('organization')
+            ->andWhere('membership.user = :user')
+            ->andWhere('membership.status = :membershipStatus')
+            ->andWhere('organization.status = :organizationStatus')
+            ->setParameter('user', $user)
+            ->setParameter('membershipStatus', MembershipStatus::Active)
+            ->setParameter('organizationStatus', \App\Organizations\Domain\Enum\OrganizationStatus::Active)
+            ->orderBy('organization.legalName', 'ASC')
+            ->addOrderBy('organization.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return $memberships;
+    }
+
     public function listByOrganization(Organization $organization): array
     {
         return $this->findBy(['organization' => $organization], ['id' => 'ASC']);

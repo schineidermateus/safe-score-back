@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Organizations\Application\UseCase;
 
+use App\Audit\Application\AuditLogger;
 use App\Authorization\Application\AuthorizationService;
 use App\Authorization\Domain\AuthorizationAction;
 use App\Authorization\Domain\Entity\Capability;
@@ -20,6 +21,7 @@ use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
 use App\Organizations\Domain\Enum\MembershipRole;
 use App\Shared\Domain\Exception\DomainException;
+use App\Tests\Audit\Support\InMemoryAuditLogRepository;
 use App\Tests\Identity\Support\InMemoryUserRepository;
 use App\Tests\Organizations\Support\InMemoryMembershipRepository;
 use App\Tests\Organizations\Support\InMemoryOrganizationRepository;
@@ -56,8 +58,8 @@ final class FoundationUseCasesTest extends TestCase
                 return $this->user;
             }
         };
-        $useCase = new CreateOrganization($organizations, $memberships, $currentUser, new ImmediateTransactionManager());
-        $useCase->execute(new CreateOrganizationInput('SafeScore A', document: '04.252.011/0001-10'));
+        $useCase = new CreateOrganization($organizations, $memberships, $currentUser, new ImmediateTransactionManager(), new AuditLogger(new InMemoryAuditLogRepository()));
+        $useCase->execute(new CreateOrganizationInput('Stone Organization A', document: '04.252.011/0001-10'));
 
         $created = $organizations->findById(1);
         self::assertNotNull($created);
@@ -65,7 +67,7 @@ final class FoundationUseCasesTest extends TestCase
         self::assertSame(MembershipRole::Owner, $membership?->role());
 
         $this->expectException(DomainException::class);
-        $useCase->execute(new CreateOrganizationInput('SafeScore B', document: '04252011000110'));
+        $useCase->execute(new CreateOrganizationInput('Stone Organization B', document: '04252011000110'));
     }
 
     public function testDuplicateMembershipIsRejectedAndSuspendedMembershipDoesNotGrantAccess(): void
@@ -96,7 +98,7 @@ final class FoundationUseCasesTest extends TestCase
         self::assertFalse($duplicate->grantsAccess());
 
         $this->expectException(DomainException::class);
-        (new AddUserToOrganization($users, $memberships, $context, new AuthorizationService($context)))
+        (new AddUserToOrganization($users, $memberships, $context, $context, new AuthorizationService($context), new AuditLogger(new InMemoryAuditLogRepository()), new ImmediateTransactionManager()))
             ->execute(new AddMemberInput($target->requireId(), MembershipRole::Viewer->value));
     }
 }

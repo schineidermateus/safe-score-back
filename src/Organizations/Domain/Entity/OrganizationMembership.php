@@ -19,11 +19,12 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\UniqueConstraint(name: 'uniq_membership_organization_user', columns: ['organization_id', 'user_id'])]
 #[ORM\Index(name: 'idx_membership_organization_status', columns: ['organization_id', 'status'])]
 #[ORM\Index(name: 'idx_membership_user', columns: ['user_id'])]
+#[ORM\Index(name: 'idx_membership_user_status_organization', columns: ['user_id', 'status', 'organization_id'])]
 class OrganizationMembership
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
+    #[ORM\Column(type: Types::BIGINT, options: ['unsigned' => true])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Organization::class)]

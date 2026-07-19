@@ -23,7 +23,7 @@ Module/
 
 ## Identificadores
 
-- PKs são `INT UNSIGNED AUTO_INCREMENT`, ou `BIGINT` somente com justificativa de capacidade.
+- PKs são `BIGINT UNSIGNED AUTO_INCREMENT`.
 - PHP e JSON tratam IDs como inteiros numéricos.
 - FKs usam o mesmo tipo da PK referenciada.
 - UUID, ULID, GUID e IDs string não são permitidos.

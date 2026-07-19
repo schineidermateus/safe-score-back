@@ -17,7 +17,9 @@ final class IdentityOrganizationRoutesTest extends KernelTestCase
         $routes = $router->getRouteCollection();
 
         foreach ([
+            'auth_me' => ['/auth/me', ['GET']],
             'identity_me' => ['/api/v1/me', ['GET']],
+            'organizations_accessible' => ['/organizations', ['GET']],
             'organizations_current' => ['/api/v1/organizations/current', ['GET']],
             'organizations_members_list' => ['/api/v1/organizations/current/members', ['GET']],
             'organizations_members_add' => ['/api/v1/organizations/current/members', ['POST']],

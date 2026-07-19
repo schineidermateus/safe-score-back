@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Identity\Infrastructure\Security;
 
-use App\Identity\Domain\Repository\UserRepository;
+use App\Identity\Domain\Repository\ExternalIdentityRepository;
 use App\Identity\Infrastructure\Security\Jwt\JwtTokenValidator;
 use App\Identity\Infrastructure\Security\Jwt\JwtValidationException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
@@ -23,7 +23,7 @@ final readonly class JwtAccessTokenHandler implements AccessTokenHandlerInterfac
     public function __construct(
         private JwtTokenValidator $validator,
         private RequestAuthenticatedTokenProvider $tokenContext,
-        private UserRepository $users,
+        private ExternalIdentityRepository $identities,
     ) {
     }
 
@@ -35,18 +35,18 @@ final readonly class JwtAccessTokenHandler implements AccessTokenHandlerInterfac
             throw new BadCredentialsException('Access token inválido.', 0, $exception);
         }
 
-        $this->tokenContext->store($token);
-
         return new UserBadge($token->subject, function () use ($token) {
-            $user = $this->users->findByExternalIdentity($token->issuer, $token->subject);
-            if (null === $user) {
+            $identity = $this->identities->findActive($token->issuer, $token->subject);
+            if (null === $identity) {
                 $exception = new UserNotFoundException('Usuário não vinculado à identidade autenticada.');
                 $exception->setUserIdentifier($token->subject);
 
                 throw $exception;
             }
 
-            return $user;
+            $this->tokenContext->store($token);
+
+            return $identity->user();
         });
     }
 }

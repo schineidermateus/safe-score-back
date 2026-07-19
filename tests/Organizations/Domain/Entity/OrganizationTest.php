@@ -12,8 +12,8 @@ final class OrganizationTest extends TestCase
     public function testItUsesMvpDefaultsAndStartsWithoutDatabaseId(): void
     {
         $organization = Organization::create(
-            'SafeScore LTDA',
-            'SafeScore',
+            'Stone Traceability LTDA',
+            'Stone Traceability',
             '04.252.011/0001-10',
             new \DateTimeImmutable(),
         );

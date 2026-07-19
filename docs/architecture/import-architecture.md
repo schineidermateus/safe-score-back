@@ -99,7 +99,7 @@ Salvar arquivo em storage antes do processamento.
 Exemplo:
 
 ```text
-organizations/{tenant}/imports/{uuid}.xlsx
+organizations/{tenant}/imports/{random_storage_key}.xlsx
 ```
 
 ---

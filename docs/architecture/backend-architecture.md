@@ -1,7 +1,7 @@
 # Backend Architecture
 
 **Projeto:** Stone Platform Backend  
-**Tecnologia:** Symfony 7+, PHP 8.3, Doctrine ORM, MySQL
+**Tecnologia:** Symfony 7.3, PHP 8.4, Doctrine ORM, MySQL 8+
 
 > Este documento define a arquitetura oficial do backend da Stone Platform e serve como referência para todas as decisões técnicas do projeto.
 
@@ -223,7 +223,7 @@ Nunca confiar em `organization_id` enviado pelo cliente.
 
 - JWT;
 - Capabilities;
-- Hash seguro de senha;
+- autenticação delegada ao provedor externo, sem senha no backend;
 - Validação de entrada;
 - Secrets fora do código.
 

@@ -17,8 +17,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  */
 final class JwksClient
 {
-    private const CACHE_KEY = 'safescore.jwks.keys';
-    private const REFRESH_GUARD_KEY = 'safescore.jwks.refresh_guard';
+    private const CACHE_KEY = 'stone_traceability.jwks.keys';
+    private const REFRESH_GUARD_KEY = 'stone_traceability.jwks.refresh_guard';
     private const MAX_DOCUMENT_BYTES = 1048576;
 
     public function __construct(
@@ -49,7 +49,11 @@ final class JwksClient
             throw new JwtValidationException(sprintf('Nenhuma chave do JWKS corresponde ao key id "%s" do token.', $kid));
         }
 
-        return JwkToPem::convert($keys[$kid]);
+        try {
+            return JwkToPem::convert($keys[$kid]);
+        } catch (JwtValidationException $exception) {
+            throw new JwksUnavailableException('A chave selecionada no JWKS é inválida.', 0, $exception);
+        }
     }
 
     /**
@@ -106,18 +110,18 @@ final class JwksClient
             ]);
             $content = $response->getContent();
             if (strlen($content) > self::MAX_DOCUMENT_BYTES) {
-                throw new JwtValidationException('O documento JWKS excede o tamanho máximo permitido.');
+                throw new JwksUnavailableException('O documento JWKS excede o tamanho máximo permitido.');
             }
             $document = json_decode($content, true, 64, \JSON_THROW_ON_ERROR);
         } catch (\Throwable $exception) {
-            if ($exception instanceof JwtValidationException) {
+            if ($exception instanceof JwksUnavailableException) {
                 throw $exception;
             }
-            throw new JwtValidationException('Não foi possível obter o documento JWKS.', 0, $exception);
+            throw new JwksUnavailableException('Não foi possível obter o documento JWKS.', 0, $exception);
         }
 
         if (!is_array($document) || !isset($document['keys']) || !is_array($document['keys']) || !array_is_list($document['keys'])) {
-            throw new JwtValidationException('O documento JWKS não contém uma lista de chaves válida.');
+            throw new JwksUnavailableException('O documento JWKS não contém uma lista de chaves válida.');
         }
 
         $keys = [];
@@ -127,12 +131,12 @@ final class JwksClient
             }
             $kid = $key['kid'];
             if (isset($keys[$kid])) {
-                throw new JwtValidationException(sprintf('O documento JWKS contém o kid duplicado "%s".', $kid));
+                throw new JwksUnavailableException('O documento JWKS contém um kid duplicado.');
             }
             $keys[$kid] = $key;
         }
         if ([] === $keys) {
-            throw new JwtValidationException('O documento JWKS não contém chaves RSA de assinatura compatíveis com RS256.');
+            throw new JwksUnavailableException('O documento JWKS não contém chaves RSA de assinatura compatíveis com RS256.');
         }
 
         return $keys;

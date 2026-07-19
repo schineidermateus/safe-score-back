@@ -13,6 +13,8 @@ services:
 
     App\Identity\Domain\Repository\UserRepository:
         alias: App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserRepository
+    App\Identity\Domain\Repository\ExternalIdentityRepository:
+        alias: App\Identity\Infrastructure\Persistence\Doctrine\DoctrineExternalIdentityRepository
     App\Organizations\Domain\Repository\OrganizationRepository:
         alias: App\Organizations\Infrastructure\Persistence\Doctrine\DoctrineOrganizationRepository
     App\Organizations\Domain\Repository\OrganizationMembershipRepository:
@@ -21,6 +23,8 @@ services:
         alias: App\Audit\Infrastructure\Persistence\Doctrine\DoctrineAuditLogRepository
     App\Shared\Application\Transaction\TransactionManagerInterface:
         alias: App\Shared\Infrastructure\Persistence\Doctrine\DoctrineTransactionManager
+    App\Shared\Application\Observability\CorrelationIdProviderInterface:
+        alias: App\Shared\Infrastructure\Observability\HttpCorrelationIdProvider
     App\Imports\Domain\Repository\ImportBatchRepository:
         alias: App\Imports\Infrastructure\Persistence\Doctrine\DoctrineImportBatchRepository
     App\Imports\Domain\Repository\ImportRowRepository:
@@ -29,7 +33,6 @@ services:
         alias: App\Imports\Infrastructure\Storage\LocalImportFileStorage
     App\Imports\Application\Port\CsvReaderInterface:
         alias: App\Imports\Infrastructure\Csv\NativeCsvReader
-
     App\Imports\Infrastructure\Storage\LocalImportFileStorage:
         arguments:
             $baseDirectory: '%app.import_storage_directory%'

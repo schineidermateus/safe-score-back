@@ -29,11 +29,12 @@ final class JwtTestFactory
     public function claims(): array
     {
         return [
-            'iss' => 'https://auth.safescore.local',
+            'iss' => 'https://auth.stone.local',
             'sub' => 'user:123',
             'email' => 'user@example.com',
             'organization_id' => 42,
-            'aud' => 'safescore-api',
+            'aud' => 'stone-traceability-api',
+            'iat' => time() - 10,
             'nbf' => time() - 10,
             'exp' => time() + 300,
             'roles' => ['ignored-token-role'],
@@ -46,7 +47,7 @@ final class JwtTestFactory
      */
     public function token(array $claims, array $header = []): string
     {
-        $header += ['alg' => 'RS256', 'typ' => 'JWT', 'kid' => 'key-1'];
+        $header += ['alg' => 'RS256', 'typ' => 'at+jwt', 'kid' => 'key-1'];
         $encodedHeader = self::encode(json_encode($header, \JSON_THROW_ON_ERROR));
         $encodedPayload = self::encode(json_encode($claims, \JSON_THROW_ON_ERROR));
         $signature = '';
@@ -74,6 +75,21 @@ final class JwtTestFactory
             'n' => self::encode($details['rsa']['n']),
             'e' => self::encode($details['rsa']['e']),
         ];
+    }
+
+    public function exportPrivateKey(): string
+    {
+        $privateKey = '';
+        $configuration = [];
+        $portableConfig = dirname(__DIR__, 3).'/.tools/php/extras/ssl/openssl.cnf';
+        if (is_file($portableConfig)) {
+            $configuration['config'] = $portableConfig;
+        }
+        if (!openssl_pkey_export($this->privateKey, $privateKey, null, $configuration)) {
+            throw new \RuntimeException('Não foi possível exportar a chave RSA de teste.');
+        }
+
+        return $privateKey;
     }
 
     private static function encode(string $value): string

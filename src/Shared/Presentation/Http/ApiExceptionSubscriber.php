@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared\Presentation\Http;
 
+use App\Shared\Application\Observability\CorrelationIdProviderInterface;
 use App\Shared\Domain\Exception\DomainException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -16,8 +17,10 @@ use Symfony\Component\Serializer\Exception\ExtraAttributesException;
 #[AsEventListener(event: 'kernel.exception')]
 final readonly class ApiExceptionSubscriber
 {
-    public function __construct(private LoggerInterface $logger)
-    {
+    public function __construct(
+        private LoggerInterface $logger,
+        private ?CorrelationIdProviderInterface $correlationIds = null,
+    ) {
     }
 
     public function __invoke(ExceptionEvent $event): void
@@ -35,7 +38,7 @@ final readonly class ApiExceptionSubscriber
                     $exception->getMessage(),
                     $exception->field(),
                 ),
-            ], $exception->statusCode()));
+            ], $exception->statusCode(), $this->errorMeta()));
 
             return;
         }
@@ -43,7 +46,7 @@ final readonly class ApiExceptionSubscriber
         if ($exception instanceof ExtraAttributesException) {
             $event->setResponse(ApiResponseFactory::error([
                 new ApiError('BAD_REQUEST', 'O payload contém campos não permitidos.'),
-            ], 400));
+            ], 400, $this->errorMeta()));
 
             return;
         }
@@ -52,7 +55,7 @@ final readonly class ApiExceptionSubscriber
             $status = $exception->getStatusCode();
             $event->setResponse(ApiResponseFactory::error([
                 new ApiError($this->httpErrorCode($status), $this->safeHttpMessage($status)),
-            ], $status));
+            ], $status, $this->errorMeta()));
 
             return;
         }
@@ -65,7 +68,15 @@ final readonly class ApiExceptionSubscriber
 
         $event->setResponse(ApiResponseFactory::error([
             new ApiError('INTERNAL_ERROR', 'Ocorreu um erro interno.'),
-        ], 500));
+        ], 500, $this->errorMeta()));
+    }
+
+    /** @return array{correlation_id: string}|array{} */
+    private function errorMeta(): array
+    {
+        return null === $this->correlationIds
+            ? []
+            : ['correlation_id' => $this->correlationIds->current()];
     }
 
     private function httpErrorCode(int $status): string

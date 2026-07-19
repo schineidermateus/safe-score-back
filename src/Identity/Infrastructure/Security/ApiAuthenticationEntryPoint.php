@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Identity\Infrastructure\Security;
 
+use App\Shared\Application\Observability\CorrelationIdProviderInterface;
 use App\Shared\Presentation\Http\ApiError;
 use App\Shared\Presentation\Http\ApiResponseFactory;
 use Symfony\Component\HttpFoundation\Request;
@@ -13,10 +14,14 @@ use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface
 
 final class ApiAuthenticationEntryPoint implements AuthenticationEntryPointInterface
 {
+    public function __construct(private CorrelationIdProviderInterface $correlationIds)
+    {
+    }
+
     public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
         return ApiResponseFactory::error([
             new ApiError('UNAUTHENTICATED', 'Autenticação necessária.'),
-        ], Response::HTTP_UNAUTHORIZED);
+        ], Response::HTTP_UNAUTHORIZED, ['correlation_id' => $this->correlationIds->current()]);
     }
 }

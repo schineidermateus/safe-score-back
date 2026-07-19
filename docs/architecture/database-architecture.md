@@ -50,14 +50,14 @@ MySQL
 
 - snake_case
 - singular
-- prefixo `sp_` (ou outro prefixo oficial definido para o projeto)
+- sem prefixo global; nomes devem refletir explicitamente o módulo ou agregado
 
 Exemplo:
 
 ```text
-sp_block
-sp_lot
-sp_production_order
+app_user
+organization_membership
+import_batches
 ```
 
 ## Colunas

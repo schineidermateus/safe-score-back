@@ -1,7 +1,7 @@
 # Backend Spec 01 — Identidade e Organizações
 
 ## Status
-Proposta para implementação incremental.
+Infraestrutura externa preparada; fluxo funcional de seleção pendente.
 
 ## Objetivo
 Consolidar autenticação, usuários, organizações e memberships.
@@ -21,16 +21,40 @@ Consolidar autenticação, usuários, organizações e memberships.
 Specs anteriores na ordem numérica.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Autenticação externa, perfil, organizações acessíveis, seleção de organização atual, status de usuário, identidade externa e membership.
 
 ## Regras específicas
 Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+
+- `GET /auth/me`: retorna usuário, organização e membership do contexto autenticado.
+- `GET /organizations`: lista somente organizações ativas ligadas ao usuário por memberships ativas.
+
+Não existe endpoint de login local. O contrato de seleção para usuários com múltiplas organizações será definido antes de implementar a etapa funcional da Spec 01; até lá, o backend não emite token próprio nem mantém seleção de tenant fictícia.
+
+O contrato legado `GET /api/v1/me` permanece como alias compatível.
+
+## Decisões de identidade
+
+- O provedor externo autentica a identidade; o backend não recebe nem persiste senha.
+- O backend valida access tokens externos RS256 com a chave pública disponível no `JWKS_URI` e não possui chave privada de autenticação.
+- A identidade local é resolvida exclusivamente por `issuer + subject`; `user_id`, email e roles do token não concedem vínculo ou autorização.
+- `ExternalIdentity` distingue vínculo externo, usuário local e status do vínculo.
+- Usuário, organização e membership são relidos do banco em cada request protegida. A desativação posterior à emissão invalida o acesso sem depender da expiração do token.
+- Nomes de roles não concedem acesso. Roles persistidas agrupam capabilities.
+
+## Seleção inicial
+
+- nenhuma membership ativa: contexto organizacional negado;
+- uma membership ativa: seleção automática não ambígua;
+- várias memberships ativas: `ORGANIZATION_SELECTION_REQUIRED` até a definição do contrato explícito;
+- organização ausente, inativa, alheia ou ligada por membership inativa: resposta de recurso indisponível sem revelar sua existência.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Token externo, assinatura, claims, vínculo externo, status local, membership, tenant, capabilities e IDs numéricos.
+
+Revogação no provedor depende da expiração do access token enquanto não houver introspecção. Suspensão de usuário, identidade externa, membership ou organização local produz efeito na próxima requisição que revalida esse contexto.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

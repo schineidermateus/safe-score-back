@@ -7,6 +7,7 @@ namespace App\Identity\Infrastructure\Security;
 use App\Identity\Application\Context\AuthenticatedToken;
 use App\Identity\Application\Context\AuthenticatedTokenProviderInterface;
 use App\Shared\Domain\Exception\DomainException;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Guarda, no escopo da request, os claims do token validado.
@@ -16,7 +17,7 @@ use App\Shared\Domain\Exception\DomainException;
  * uma instância nova do container em produção (php-fpm/mod_php), então o estado
  * mutável nunca vaza entre requests.
  */
-final class RequestAuthenticatedTokenProvider implements AuthenticatedTokenProviderInterface
+final class RequestAuthenticatedTokenProvider implements AuthenticatedTokenProviderInterface, ResetInterface
 {
     private ?AuthenticatedToken $token = null;
 
@@ -29,5 +30,10 @@ final class RequestAuthenticatedTokenProvider implements AuthenticatedTokenProvi
     {
         return $this->token
             ?? throw new DomainException('UNAUTHENTICATED', 'Autenticação necessária.', 401);
+    }
+
+    public function reset(): void
+    {
+        $this->token = null;
     }
 }

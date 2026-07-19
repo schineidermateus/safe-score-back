@@ -43,12 +43,4 @@ final class DoctrineUserRepository extends ServiceEntityRepository implements Us
     {
         return $this->findOneBy(['email' => mb_strtolower(trim($email))]);
     }
-
-    public function findByExternalIdentity(string $issuer, string $subject): ?User
-    {
-        return $this->findOneBy([
-            'identityIssuer' => $issuer,
-            'externalSubject' => $subject,
-        ]);
-    }
 }

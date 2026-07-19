@@ -7,6 +7,11 @@ api_platform:
     docs_formats:
         jsonopenapi: ['application/vnd.openapi+json']
         html: ['text/html']
+    swagger:
+        http_auth:
+            bearerAuth:
+                scheme: bearer
+                bearerFormat: JWT
     defaults:
         stateless: true
         cache_headers:

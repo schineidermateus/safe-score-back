@@ -7,13 +7,8 @@ namespace App\Shared\Infrastructure\Fixtures;
 use App\Authorization\Domain\AuthorizationAction;
 use App\Authorization\Domain\Entity\Capability;
 use App\Authorization\Domain\Entity\Role;
+use App\Identity\Domain\Entity\ExternalIdentity;
 use App\Identity\Domain\Entity\User;
-use App\Industrial\Domain\Entity\BusinessPartner;
-use App\Industrial\Domain\Entity\Machine;
-use App\Industrial\Domain\Entity\Material;
-use App\Industrial\Domain\Entity\Quarry;
-use App\Industrial\Domain\Entity\StorageLocation;
-use App\Industrial\Domain\Enum\BusinessPartnerType;
 use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
 use App\Organizations\Domain\Enum\MembershipRole;
@@ -24,13 +19,21 @@ final class AppFixtures extends Fixture
 {
     public function load(ObjectManager $manager): void
     {
-        $now = new \DateTimeImmutable();
+        $now = new \DateTimeImmutable('2026-01-01T00:00:00+00:00');
         $organizationA = Organization::create('Rochas Demo LTDA', 'Rochas Demo', '04252011000110', $now);
         $organizationB = Organization::create('Pedras Tenant B LTDA', 'Pedras B', '11222333000181', $now);
-        $ownerA = User::create('Owner Demo', 'owner@stone.local', $now);
+        $organizationUnavailable = Organization::create('Tenant Indisponível LTDA', 'Tenant Indisponível', '99888777000166', $now);
+        $organizationUnavailable->suspend($now);
+        $multiTenantUser = User::create('Usuário Multi Tenant', 'multi@stone.local', $now);
         $ownerB = User::create('Owner Tenant B', 'owner-b@stone.local', $now);
-        $ownerA->linkExternalIdentity('https://auth.stone.local', 'fixture:owner-a', $now);
-        $ownerB->linkExternalIdentity('https://auth.stone.local', 'fixture:owner-b', $now);
+        $suspendedMembershipUser = User::create('Membership Suspensa', 'membership-suspended@stone.local', $now);
+        $blockedUser = User::create('Usuário Bloqueado', 'blocked@stone.local', $now);
+        $blockedUser->suspend($now);
+        $userWithoutMembership = User::create('Sem Organização', 'no-membership@stone.local', $now);
+        $identities = [];
+        foreach ([$multiTenantUser, $ownerB, $suspendedMembershipUser, $blockedUser, $userWithoutMembership] as $index => $user) {
+            $identities[] = ExternalIdentity::link($user, 'https://auth.stone.local', 'fixture:user-'.($index + 1), $now);
+        }
 
         $ownerProfile = Role::create('FOUNDATION_OWNER', 'Foundation owner');
         foreach (AuthorizationAction::cases() as $action) {
@@ -40,21 +43,32 @@ final class AppFixtures extends Fixture
             $manager->persist($capability);
         }
 
-        $membershipA = OrganizationMembership::join($organizationA, $ownerA, MembershipRole::Owner, $now);
+        $membershipA = OrganizationMembership::join($organizationA, $multiTenantUser, MembershipRole::Owner, $now);
+        $membershipMultiTenantB = OrganizationMembership::join($organizationB, $multiTenantUser, MembershipRole::Viewer, $now);
         $membershipB = OrganizationMembership::join($organizationB, $ownerB, MembershipRole::Owner, $now);
+        $suspendedMembership = OrganizationMembership::join($organizationB, $suspendedMembershipUser, MembershipRole::Viewer, $now);
+        $suspendedMembership->suspend($now);
+        $blockedMembership = OrganizationMembership::join($organizationA, $blockedUser, MembershipRole::Viewer, $now);
         $membershipA->assignAuthorizationRole($ownerProfile);
+        $membershipMultiTenantB->assignAuthorizationRole($ownerProfile);
         $membershipB->assignAuthorizationRole($ownerProfile);
 
-        foreach ([$organizationA, $organizationB, $ownerA, $ownerB, $ownerProfile, $membershipA, $membershipB] as $entity) {
-            $manager->persist($entity);
-        }
-
         foreach ([
-            BusinessPartner::create($organizationA, 'SUP-001', 'Fornecedor Demo LTDA', 'Fornecedor Demo', BusinessPartnerType::Supplier, $now),
-            Material::create($organizationA, 'BRANCO-001', 'Granito Branco Demo', $now),
-            Quarry::create($organizationA, 'PED-001', 'Pedreira Demo', $now),
-            StorageLocation::create($organizationA, 'PATIO-A', 'Pátio principal', $now),
-            Machine::create($organizationA, 'TEAR-01', 'Tear multifio 01', $now),
+            $organizationA,
+            $organizationB,
+            $organizationUnavailable,
+            $multiTenantUser,
+            $ownerB,
+            $suspendedMembershipUser,
+            $blockedUser,
+            $userWithoutMembership,
+            $ownerProfile,
+            ...$identities,
+            $membershipA,
+            $membershipMultiTenantB,
+            $membershipB,
+            $suspendedMembership,
+            $blockedMembership,
         ] as $entity) {
             $manager->persist($entity);
         }

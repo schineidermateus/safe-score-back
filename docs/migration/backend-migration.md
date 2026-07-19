@@ -1,6 +1,6 @@
 # Backend Migration — SafeScore para Plataforma de Rastreabilidade de Rochas
 
-> Estado de implementação: a baseline SafeScore foi substituída por uma baseline modular para banco novo. O domínio financeiro não faz parte do schema atual. As estruturas implementadas nesta etapa são identidade, organizações, authorization persistida, imports genéricos, auditoria, BusinessPartner, Material, Quarry, StorageLocation e Machine. Tipos de import industrial permanecem desabilitados até suas specs próprias.
+> Estado de implementação: a baseline SafeScore foi substituída por uma baseline modular para banco novo. O domínio financeiro não faz parte do schema atual. A Spec 00 contém somente identidade, organizações, authorization técnica persistida, imports genéricos e auditoria. Entidades industriais dependem de suas próprias specs. Tipos de import industrial permanecem desabilitados até essas implementações.
 
 ## 1. Objetivo
 

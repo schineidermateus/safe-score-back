@@ -57,14 +57,17 @@ Use Case
 
 ## 5. Autenticação
 
-Utilizar JWT stateless.
+Utilizar access token JWT externo stateless assinado com RS256. O frontend autentica no provedor de identidade e envia o token como Bearer. O backend verifica a assinatura com o JWKS configurado e resolve o perfil local exclusivamente por issuer e subject. O backend não recebe senha e não possui chave privada de autenticação.
 
 Após autenticação, o backend deve conhecer:
 
-- user_id
-- organization_id ativo
+- issuer e subject externos
+- usuário local ativo
+- organization_id ativo, quando a claim opcional estiver presente e for confirmada localmente
 - memberships
 - capabilities efetivas
+
+O `organization_id` externo nunca é fonte de autoridade: quando presente, é apenas uma indicação revalidada contra organização e membership locais. Sem a claim, uma única membership ativa pode ser selecionada de forma não ambígua. Usuários com múltiplas memberships dependem do contrato explícito de seleção a ser definido na Spec 01.
 
 ---
 

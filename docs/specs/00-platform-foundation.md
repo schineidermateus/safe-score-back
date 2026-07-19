@@ -7,7 +7,7 @@ Proposta para implementação incremental.
 Criar a nova baseline limpa do backend após a remoção do domínio SafeScore.
 
 ## Regras globais
-- IDs inteiros numéricos; não usar UUID ou ULID.
+- IDs inteiros numéricos com PKs `BIGINT UNSIGNED AUTO_INCREMENT`; não usar UUID ou ULID.
 - O backend resolve a organização pelo contexto autenticado.
 - O frontend não envia `organization_id` em operações comuns.
 - Toda entidade e consulta de negócio respeita isolamento multi-tenant.
@@ -27,7 +27,7 @@ Remover migrations, entidades, endpoints, fixtures e testes financeiros; preserv
 O banco alvo é novo; não criar migrations de transformação ou cópia. Validar schema a partir de banco vazio.
 
 ## Contratos e operações
-Nova baseline de migrations; fixtures técnicas; capabilities industriais; remoção dos endpoints antigos.
+Nova baseline de migrations; fixtures técnicas; capabilities necessárias aos recursos preservados; remoção dos endpoints antigos.
 
 ## Testes obrigatórios
 Banco vazio, migrations, schema validate, fixtures, autenticação, tenant e ausência de UUID/ULID.

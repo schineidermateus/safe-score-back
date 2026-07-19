@@ -22,7 +22,7 @@ final class JwtTokenValidatorTest extends TestCase
 
         $token = $validator->validate($factory->token($factory->claims()));
 
-        self::assertSame('https://auth.safescore.local', $token->issuer);
+        self::assertSame('https://auth.stone.local', $token->issuer);
         self::assertSame('user:123', $token->subject);
         self::assertSame('user@example.com', $token->email);
         self::assertSame(42, $token->organizationId);
@@ -36,6 +36,7 @@ final class JwtTokenValidatorTest extends TestCase
             ['exp' => (string) (time() + 300)],
             ['organization_id' => ['42']],
             ['organization_id' => 0],
+            ['iat' => time() + 301],
             ['sub' => ''],
             ['email' => 'not-an-email'],
             ['aud' => [123]],
@@ -49,6 +50,29 @@ final class JwtTokenValidatorTest extends TestCase
                 self::addToAssertionCount(1);
             }
         }
+    }
+
+    public function testEmailAndOrganizationAreOptionalForExternalIdentityAuthentication(): void
+    {
+        $factory = new JwtTestFactory();
+        $claims = $factory->claims();
+        unset($claims['email'], $claims['organization_id']);
+
+        $token = $this->validator($factory)->validate($factory->token($claims));
+
+        self::assertNull($token->email);
+        self::assertNull($token->organizationId);
+    }
+
+    public function testAudienceArrayIsAcceptedAndIssuedAtIsRequired(): void
+    {
+        $factory = new JwtTestFactory();
+        $claims = array_replace($factory->claims(), ['aud' => ['another-api', 'stone-traceability-api']]);
+        self::assertSame('user:123', $this->validator($factory)->validate($factory->token($claims))->subject);
+
+        unset($claims['iat']);
+        $this->expectException(JwtValidationException::class);
+        $this->validator($factory)->validate($factory->token($claims));
     }
 
     public function testItRejectsExpiredWrongIssuerAudienceAlgorithmAndSignature(): void
@@ -76,7 +100,7 @@ final class JwtTokenValidatorTest extends TestCase
     public function testJwksRequiresHttps(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-        new JwksClient(new MockHttpClient(), new ArrayAdapter(), 'http://auth.safescore.local/jwks');
+        new JwksClient(new MockHttpClient(), new ArrayAdapter(), 'http://auth.stone.local/jwks');
     }
 
     public function testJwksRejectsKeysThatCannotVerifyRs256Signatures(): void
@@ -90,7 +114,7 @@ final class JwtTokenValidatorTest extends TestCase
         $http = new MockHttpClient([
             new MockResponse(json_encode(['keys' => $invalidKeys], \JSON_THROW_ON_ERROR)),
         ]);
-        $client = new JwksClient($http, new ArrayAdapter(), 'https://auth.safescore.local/jwks');
+        $client = new JwksClient($http, new ArrayAdapter(), 'https://auth.stone.local/jwks');
 
         $this->expectException(JwtValidationException::class);
         $client->publicKeyForKid('encryption');
@@ -104,7 +128,7 @@ final class JwtTokenValidatorTest extends TestCase
                 'keys' => [$factory->jwk('duplicate'), $factory->jwk('duplicate')],
             ], \JSON_THROW_ON_ERROR)),
         ]);
-        $client = new JwksClient($http, new ArrayAdapter(), 'https://auth.safescore.local/jwks');
+        $client = new JwksClient($http, new ArrayAdapter(), 'https://auth.stone.local/jwks');
 
         $this->expectException(JwtValidationException::class);
         $client->publicKeyForKid('duplicate');
@@ -117,7 +141,7 @@ final class JwtTokenValidatorTest extends TestCase
         $http = new MockHttpClient([
             new MockResponse(json_encode(['keys' => [$malformed]], \JSON_THROW_ON_ERROR)),
         ]);
-        $client = new JwksClient($http, new ArrayAdapter(), 'https://auth.safescore.local/jwks');
+        $client = new JwksClient($http, new ArrayAdapter(), 'https://auth.stone.local/jwks');
 
         $this->expectException(JwtValidationException::class);
         $client->publicKeyForKid('malformed');
@@ -126,10 +150,10 @@ final class JwtTokenValidatorTest extends TestCase
     public function testValidatorRejectsInvalidConfiguration(): void
     {
         $factory = new JwtTestFactory();
-        $jwks = new JwksClient(new MockHttpClient(), new ArrayAdapter(), 'https://auth.safescore.local/jwks');
+        $jwks = new JwksClient(new MockHttpClient(), new ArrayAdapter(), 'https://auth.stone.local/jwks');
 
         $this->expectException(\InvalidArgumentException::class);
-        new JwtTokenValidator($jwks, '', 'safescore-api', -1);
+        new JwtTokenValidator($jwks, '', 'stone-traceability-api', -1);
     }
 
     public function testUnknownKidRefreshIsThrottledWithoutDeletingValidKeys(): void
@@ -137,18 +161,18 @@ final class JwtTokenValidatorTest extends TestCase
         $old = new JwtTestFactory();
         $rotated = new JwtTestFactory();
         $cache = new ArrayAdapter();
-        $cached = $cache->getItem('safescore.jwks.keys');
+        $cached = $cache->getItem('stone_traceability.jwks.keys');
         $cached->set(['keys' => ['old' => $old->jwk('old')], 'fetched_at' => time() - 120]);
         $cached->expiresAfter(3600);
         $cache->save($cached);
         $http = new MockHttpClient([
             new MockResponse(json_encode(['keys' => [$rotated->jwk('new')]], \JSON_THROW_ON_ERROR)),
         ]);
-        $client = new JwksClient($http, $cache, 'https://auth.safescore.local/jwks', 3600, 30);
+        $client = new JwksClient($http, $cache, 'https://auth.stone.local/jwks', 3600, 30);
 
         self::assertStringContainsString('BEGIN PUBLIC KEY', $client->publicKeyForKid('new'));
 
-        $cached = $cache->getItem('safescore.jwks.keys');
+        $cached = $cache->getItem('stone_traceability.jwks.keys');
         $cached->set(['keys' => ['new' => $rotated->jwk('new')], 'fetched_at' => time() - 120]);
         $cache->save($cached);
         try {
@@ -166,9 +190,9 @@ final class JwtTokenValidatorTest extends TestCase
         ]);
 
         return new JwtTokenValidator(
-            new JwksClient($http, new ArrayAdapter(), 'https://auth.safescore.local/jwks'),
-            'https://auth.safescore.local',
-            'safescore-api',
+            new JwksClient($http, new ArrayAdapter(), 'https://auth.stone.local/jwks'),
+            'https://auth.stone.local',
+            'stone-traceability-api',
             30,
         );
     }

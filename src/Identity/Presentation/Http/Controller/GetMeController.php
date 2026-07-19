@@ -15,6 +15,7 @@ final readonly class GetMeController
     {
     }
 
+    #[Route('/auth/me', name: 'auth_me', methods: ['GET'])]
     #[Route('/api/v1/me', name: 'identity_me', methods: ['GET'])]
     public function __invoke(): JsonResponse
     {

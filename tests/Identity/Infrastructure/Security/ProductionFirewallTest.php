@@ -28,6 +28,22 @@ final class ProductionFirewallTest extends TestCase
         self::assertSame(401, $response->getStatusCode());
     }
 
+    public function testSpecIdentityAndOrganizationEndpointsRequireAuthentication(): void
+    {
+        foreach (['/auth/me', '/organizations'] as $path) {
+            $response = $this->request(Request::create($path, 'GET'));
+            self::assertSame(401, $response->getStatusCode(), $path);
+        }
+    }
+
+    public function testLocalLoginEndpointDoesNotExist(): void
+    {
+        $request = Request::create('/auth/login', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: '{}');
+        $response = $this->request($request);
+
+        self::assertSame(404, $response->getStatusCode());
+    }
+
     private function request(Request $request): \Symfony\Component\HttpFoundation\Response
     {
         $kernel = new Kernel('prod', false);

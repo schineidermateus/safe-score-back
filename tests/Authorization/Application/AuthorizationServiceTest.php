@@ -20,8 +20,8 @@ final class AuthorizationServiceTest extends TestCase
 {
     public function testCapabilityGrantIsIndependentFromAdministrativeRoleName(): void
     {
-        $context = $this->context(MembershipRole::Viewer, AuthorizationAction::MaterialWrite);
-        (new AuthorizationService($context))->assertGranted(AuthorizationAction::MaterialWrite);
+        $context = $this->context(MembershipRole::Viewer, AuthorizationAction::ImportWrite);
+        (new AuthorizationService($context))->assertGranted(AuthorizationAction::ImportWrite);
         self::addToAssertionCount(1);
     }
 
@@ -29,7 +29,7 @@ final class AuthorizationServiceTest extends TestCase
     {
         $context = $this->context(MembershipRole::Owner);
         $this->expectException(DomainException::class);
-        (new AuthorizationService($context))->assertGranted(AuthorizationAction::MaterialRead);
+        (new AuthorizationService($context))->assertGranted(AuthorizationAction::ImportRead);
     }
 
     public function testManageMembersCannotAssignOwnerWithoutSpecificCapability(): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Organizations\Application\UseCase;
 
+use App\Audit\Application\AuditLogger;
 use App\Authorization\Application\AuthorizationService;
 use App\Authorization\Domain\AuthorizationAction;
 use App\Authorization\Domain\Entity\Capability;
@@ -15,6 +16,7 @@ use App\Organizations\Domain\Entity\Organization;
 use App\Organizations\Domain\Entity\OrganizationMembership;
 use App\Organizations\Domain\Enum\MembershipRole;
 use App\Shared\Domain\Exception\DomainException;
+use App\Tests\Audit\Support\InMemoryAuditLogRepository;
 use App\Tests\Organizations\Support\InMemoryMembershipRepository;
 use App\Tests\Support\CurrentContextStub;
 use App\Tests\Support\EntityId;
@@ -39,13 +41,17 @@ final class OwnerProtectionTest extends TestCase
         $repository->save($currentMembership);
         $repository->save($targetMembership);
         $context = new CurrentContextStub($currentUser, $organization, $currentMembership);
+        $audits = new InMemoryAuditLogRepository();
 
-        (new ChangeMembershipRole($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager()))
+        (new ChangeMembershipRole($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager(), $context, new AuditLogger($audits)))
             ->execute($targetMembership->requireId(), MembershipRole::Admin);
 
         self::assertSame(MembershipRole::Admin, $targetMembership->role());
         self::assertSame(1, $repository->countActiveOwners($organization));
         self::assertSame(1, $repository->activeOwnerLockCount());
+        self::assertSame('MEMBERSHIP_ROLE_CHANGED', $audits->all()[0]->action());
+        self::assertSame(['role' => 'OWNER'], $audits->all()[0]->beforeData());
+        self::assertSame(['role' => 'ADMIN'], $audits->all()[0]->afterData());
     }
 
     public function testLastOwnerCannotBeDemoted(): void
@@ -55,7 +61,7 @@ final class OwnerProtectionTest extends TestCase
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('A organização deve manter ao menos um OWNER ativo.');
 
-        (new ChangeMembershipRole($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager()))
+        (new ChangeMembershipRole($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager(), $context, new AuditLogger(new InMemoryAuditLogRepository())))
             ->execute($membership->requireId(), MembershipRole::Admin);
     }
 
@@ -66,7 +72,7 @@ final class OwnerProtectionTest extends TestCase
         $this->expectException(DomainException::class);
         $this->expectExceptionMessage('A organização deve manter ao menos um OWNER ativo.');
 
-        (new SuspendMembership($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager()))
+        (new SuspendMembership($repository, $context, new AuthorizationService($context), new ImmediateTransactionManager(), $context, new AuditLogger(new InMemoryAuditLogRepository())))
             ->execute($membership->requireId());
     }
 

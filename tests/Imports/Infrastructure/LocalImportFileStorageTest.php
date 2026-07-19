@@ -14,7 +14,7 @@ final class LocalImportFileStorageTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->directory = sys_get_temp_dir().'/safescore-import-'.bin2hex(random_bytes(6));
+        $this->directory = sys_get_temp_dir().'/stone-traceability-import-'.bin2hex(random_bytes(6));
     }
 
     protected function tearDown(): void

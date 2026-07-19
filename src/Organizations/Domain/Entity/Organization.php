@@ -12,11 +12,12 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: DoctrineOrganizationRepository::class)]
 #[ORM\Table(name: 'organization')]
 #[ORM\UniqueConstraint(name: 'uniq_organization_document', columns: ['document'])]
+#[ORM\Index(name: 'idx_organization_status', columns: ['status'])]
 class Organization
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
+    #[ORM\Column(type: Types::BIGINT, options: ['unsigned' => true])]
     private ?int $id = null;
 
     #[ORM\Column(name: 'legal_name', type: Types::STRING, length: 180)]
@@ -102,6 +103,12 @@ class Organization
     public function isActive(): bool
     {
         return OrganizationStatus::Active === $this->status;
+    }
+
+    public function suspend(\DateTimeImmutable $now): void
+    {
+        $this->status = OrganizationStatus::Suspended;
+        $this->updatedAt = $now;
     }
 
     public function timezone(): string

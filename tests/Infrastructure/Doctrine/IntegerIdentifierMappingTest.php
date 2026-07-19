@@ -19,7 +19,7 @@ final class IntegerIdentifierMappingTest extends KernelTestCase
         self::assertNotEmpty($all);
         foreach ($all as $mapping) {
             self::assertSame(['id'], $mapping->getIdentifierFieldNames(), $mapping->name);
-            self::assertSame('integer', $mapping->getTypeOfField('id'), $mapping->name);
+            self::assertSame('bigint', $mapping->getTypeOfField('id'), $mapping->name);
             self::assertSame(ClassMetadata::GENERATOR_TYPE_IDENTITY, $mapping->generatorType, $mapping->name);
             self::assertTrue($mapping->getFieldMapping('id')->options['unsigned'] ?? false, $mapping->name);
         }

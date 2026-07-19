@@ -22,7 +22,7 @@ final readonly class UpdateOrganizationMemberController
     ) {
     }
 
-    #[Route('/api/v1/organizations/current/members/{id}', name: 'organizations_members_update', requirements: ['id' => '\\d+'], methods: ['PATCH'])]
+    #[Route('/api/v1/organizations/current/members/{id}', name: 'organizations_members_update', requirements: ['id' => '\d+'], methods: ['PATCH'])]
     public function __invoke(int $id, #[MapRequestPayload] UpdateMembershipInput $input): JsonResponse
     {
         if (null !== $input->role) {

@@ -18,7 +18,7 @@ class ImportRow
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
+    #[ORM\Column(type: Types::BIGINT, options: ['unsigned' => true])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: ImportBatch::class)]
@@ -49,7 +49,7 @@ class ImportRow
     #[ORM\Column(name: 'entity_type', type: Types::STRING, length: 50, nullable: true)]
     private ?string $entityType = null;
 
-    #[ORM\Column(name: 'entity_id', type: Types::INTEGER, nullable: true, options: ['unsigned' => true])]
+    #[ORM\Column(name: 'entity_id', type: Types::BIGINT, nullable: true, options: ['unsigned' => true])]
     private ?int $entityId = null;
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]

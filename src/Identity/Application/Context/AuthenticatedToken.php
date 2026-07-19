@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Identity\Application\Context;
 
-use App\Shared\Domain\Exception\DomainException;
-
 /**
  * Retrato imutável dos claims de identidade carregados por uma request autenticada.
  *
@@ -14,26 +12,11 @@ use App\Shared\Domain\Exception\DomainException;
  */
 final readonly class AuthenticatedToken
 {
-    /**
-     * @param list<string>         $roles
-     * @param array<string, mixed> $claims
-     */
     public function __construct(
         public string $issuer,
         public string $subject,
-        public string $email,
-        public int $organizationId,
-        public array $roles = [],
-        public array $claims = [],
+        public ?string $email,
+        public ?int $organizationId,
     ) {
-    }
-
-    public function requireOrganizationId(): int
-    {
-        if ($this->organizationId < 1) {
-            throw new DomainException('ORGANIZATION_CONTEXT_REQUIRED', 'O token não identifica uma organização válida.', 403);
-        }
-
-        return $this->organizationId;
     }
 }

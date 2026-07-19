@@ -22,7 +22,7 @@ class ImportBatch
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
+    #[ORM\Column(type: Types::BIGINT, options: ['unsigned' => true])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Organization::class)]

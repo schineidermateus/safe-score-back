@@ -44,6 +44,39 @@ final class InMemoryMembershipRepository implements OrganizationMembershipReposi
         return null;
     }
 
+    public function findActiveByUserAndOrganizationId(User $user, int $organizationId): ?OrganizationMembership
+    {
+        foreach ($this->memberships as $membership) {
+            if ($membership->user() === $user
+                && $membership->organization()->id() === $organizationId
+                && $membership->grantsAccess()
+                && $membership->organization()->isActive()) {
+                return $membership;
+            }
+        }
+
+        return null;
+    }
+
+    public function listAccessibleByUser(User $user): array
+    {
+        $memberships = array_values(array_filter(
+            $this->memberships,
+            static fn (OrganizationMembership $membership): bool => $membership->user() === $user
+                && $membership->grantsAccess()
+                && $membership->organization()->isActive(),
+        ));
+        usort($memberships, static fn (OrganizationMembership $left, OrganizationMembership $right): int => [
+            $left->organization()->legalName(),
+            $left->organization()->requireId(),
+        ] <=> [
+            $right->organization()->legalName(),
+            $right->organization()->requireId(),
+        ]);
+
+        return $memberships;
+    }
+
     public function listByOrganization(Organization $organization): array
     {
         return array_values(array_filter(

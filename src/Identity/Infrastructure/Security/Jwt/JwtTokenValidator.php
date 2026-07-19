@@ -20,12 +20,16 @@ final readonly class JwtTokenValidator
         private string $issuer,
         private string $audience,
         private int $clockSkew = 30,
+        private string $tokenType = 'at+jwt',
     ) {
         if ('' === trim($this->issuer) || '' === trim($this->audience)) {
             throw new \InvalidArgumentException('Issuer e audience do JWT devem ser informados.');
         }
-        if ($this->clockSkew < 0) {
+        if ($this->clockSkew < 0 || $this->clockSkew > 300) {
             throw new \InvalidArgumentException('A tolerância de relógio do JWT não pode ser negativa.');
+        }
+        if ('' === trim($this->tokenType)) {
+            throw new \InvalidArgumentException('The expected access token type must be configured.');
         }
     }
 
@@ -48,7 +52,7 @@ final readonly class JwtTokenValidator
         if ('RS256' !== ($header['alg'] ?? null)) {
             throw new JwtValidationException('Algoritmo de assinatura não suportado; RS256 é obrigatório.');
         }
-        if (isset($header['typ']) && 'JWT' !== $header['typ']) {
+        if (($header['typ'] ?? null) !== $this->tokenType) {
             throw new JwtValidationException('O tipo do token deve ser JWT.');
         }
 
@@ -78,15 +82,13 @@ final readonly class JwtTokenValidator
             subject: $subject,
             email: $email,
             organizationId: $organizationId,
-            roles: $this->extractRoles($payload),
-            claims: $payload,
         );
     }
 
     /**
      * @param array<string, mixed> $payload
      *
-     * @return array{string, string, string, int}
+     * @return array{string, string, string|null, int|null}
      */
     private function validatedClaims(array $payload): array
     {
@@ -98,6 +100,11 @@ final readonly class JwtTokenValidator
         }
         if (isset($payload['nbf']) && $now + $this->clockSkew < $this->integerClaim($payload, 'nbf')) {
             throw new JwtValidationException('O JWT ainda não é válido.');
+        }
+
+        $issuedAt = $this->integerClaim($payload, 'iat');
+        if ($issuedAt > $now + $this->clockSkew || $issuedAt > $expiresAt) {
+            throw new JwtValidationException('The JWT iat claim is inconsistent.');
         }
 
         $issuer = $this->nonEmptyStringClaim($payload, 'iss');
@@ -118,12 +125,12 @@ final readonly class JwtTokenValidator
         }
 
         $subject = $this->nonEmptyStringClaim($payload, 'sub');
-        $email = mb_strtolower(trim($this->nonEmptyStringClaim($payload, 'email')));
-        if (false === filter_var($email, \FILTER_VALIDATE_EMAIL)) {
+        $email = isset($payload['email']) ? mb_strtolower(trim($this->nonEmptyStringClaim($payload, 'email'))) : null;
+        if (null !== $email && false === filter_var($email, \FILTER_VALIDATE_EMAIL)) {
             throw new JwtValidationException('O claim "email" não contém um endereço válido.');
         }
-        $organizationId = $this->integerClaim($payload, 'organization_id');
-        if ($organizationId < 1) {
+        $organizationId = isset($payload['organization_id']) ? $this->integerClaim($payload, 'organization_id') : null;
+        if (null !== $organizationId && $organizationId < 1) {
             throw new JwtValidationException('O claim "organization_id" deve ser um inteiro positivo.');
         }
 
@@ -150,21 +157,6 @@ final readonly class JwtTokenValidator
         }
 
         return trim($value);
-    }
-
-    /**
-     * @param array<string, mixed> $payload
-     *
-     * @return list<string>
-     */
-    private function extractRoles(array $payload): array
-    {
-        $roles = $payload['roles'] ?? [];
-        if (!is_array($roles)) {
-            return [];
-        }
-
-        return array_values(array_filter($roles, 'is_string'));
     }
 
     /**

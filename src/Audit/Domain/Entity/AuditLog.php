@@ -21,7 +21,7 @@ class AuditLog
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::INTEGER, options: ['unsigned' => true])]
+    #[ORM\Column(type: Types::BIGINT, options: ['unsigned' => true])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Organization::class)]
@@ -38,7 +38,7 @@ class AuditLog
     #[ORM\Column(name: 'entity_type', type: Types::STRING, length: 100)]
     private string $entityType;
 
-    #[ORM\Column(name: 'entity_id', type: Types::INTEGER, options: ['unsigned' => true])]
+    #[ORM\Column(name: 'entity_id', type: Types::BIGINT, options: ['unsigned' => true])]
     private int $entityId;
 
     /** @var array<string, mixed>|null */

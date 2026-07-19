@@ -16,6 +16,11 @@ interface OrganizationMembershipRepository
 
     public function findByOrganizationAndUser(Organization $organization, User $user): ?OrganizationMembership;
 
+    public function findActiveByUserAndOrganizationId(User $user, int $organizationId): ?OrganizationMembership;
+
+    /** @return list<OrganizationMembership> */
+    public function listAccessibleByUser(User $user): array;
+
     /** @return list<OrganizationMembership> */
     public function listByOrganization(Organization $organization): array;
 
