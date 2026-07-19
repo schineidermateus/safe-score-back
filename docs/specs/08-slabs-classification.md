@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 08 — Chapas, Classificação e Defeitos
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Registrar chapas com rastreabilidade até bloco e ordem.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–07.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Chapa, medidas, áreas, espessura, qualidade, defeitos, status, localização e histórico.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Área bruta calculada; área útil não supera bruta; relações do mesmo tenant; classificação auditada; movimentação gera evento de estoque.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+CRUD permitido; classify; defects; move; list/detail.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Área, rastreabilidade, classificação, defeitos, tenant e movimentação.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

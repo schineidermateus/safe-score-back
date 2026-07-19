@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 00 — Fundação da Plataforma
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Criar a nova baseline limpa do backend após a remoção do domínio SafeScore.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -21,16 +21,16 @@ Consolidar autenticação, usuários, organizações e memberships.
 Specs anteriores na ordem numérica.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Remover migrations, entidades, endpoints, fixtures e testes financeiros; preservar identidade, organizações, memberships, roles, capabilities, imports e auditoria; recriar o banco do zero.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+O banco alvo é novo; não criar migrations de transformação ou cópia. Validar schema a partir de banco vazio.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+Nova baseline de migrations; fixtures técnicas; capabilities industriais; remoção dos endpoints antigos.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Banco vazio, migrations, schema validate, fixtures, autenticação, tenant e ausência de UUID/ULID.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 15 — Dashboard e Consultas Gerenciais
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Fornecer agregações industriais para o frontend.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–14.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Summary, production, yield, inventory, costs e aging, com filtros de período e cadastros.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Agregações no backend; tenant; data de referência; evitar N+1; cache curto somente se seguro.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+GET /dashboard/summary, /production, /yield, /inventory e /costs.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Filtros, tenant, consistência, vazio e performance.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

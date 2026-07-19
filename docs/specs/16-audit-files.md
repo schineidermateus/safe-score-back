@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 16 — Auditoria e Arquivos
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Consolidar auditoria e suporte a fotos/documentos.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–15.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+AuditLog; fotos de blocos, chapas e defeitos; documentos de apoio; metadados e download autorizado.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Isolamento por tenant; MIME real; limite; nomes não previsíveis; entityId inteiro; logs sem segredos.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+Upload, list, download e delete controlado; consultas de auditoria.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Upload inválido, acesso cruzado, auditoria, exclusão e autorização.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

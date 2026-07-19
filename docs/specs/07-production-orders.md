@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 07 — Ordens de Produção
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Controlar o processamento de blocos.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–06.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Ordem com código, bloco, máquina, espessura, datas, status e observações.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Estados DRAFT, SCHEDULED, IN_PROGRESS, COMPLETED e CANCELLED; start/complete/cancel explícitos; transação; evitar ordens ativas incompatíveis.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+CRUD em draft; schedule; start; complete; cancel; detail e filtros.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Transições, tenant, concorrência lógica, idempotência e auditoria.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

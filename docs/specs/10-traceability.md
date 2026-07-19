@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 10 — Rastreabilidade
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Fornecer consulta bidirecional completa.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–09.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Block → ProductionOrder → Slab → Lot → InventoryMovement → StorageLocation e caminho inverso.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Usar relações reais; tenant-aware; timeline por eventos e timestamps; paginação quando necessário.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+Busca por código; rastreabilidade por bloco; por chapa; timeline.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Integridade da cadeia, dados incompletos, tenant e performance básica.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

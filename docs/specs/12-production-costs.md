@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 12 — Custos de Produção
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Registrar e alocar custos a blocos, ordens, chapas e lotes.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–11.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Tipos de custo, origem, data, valor, entidade alvo, rateio, histórico e custo por m².
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+DECIMAL; alocação auditável; critérios explícitos; alterações relevantes preservam histórico; custo por m² no backend.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+CRUD controlado; allocate; recalculate; detail e relatórios.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Soma, rateio, arredondamento, tenant, histórico e serialização.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

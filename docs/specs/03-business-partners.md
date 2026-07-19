@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 03 — Parceiros de Negócio
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Criar cadastro unificado de parceiros sem conceitos de crédito.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -21,16 +21,16 @@ Consolidar autenticação, usuários, organizações e memberships.
 Specs anteriores na ordem numérica.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+CRUD, filtros, paginação, tipos CUSTOMER, SUPPLIER, SERVICE_PROVIDER, QUARRY, TRANSPORTER e OTHER.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Parceiro pertence ao tenant; documento único conforme regra; status ativo/inativo; sem score, limite, exposição ou inadimplência.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+Endpoints REST de listagem, detalhe, criação, edição e ativação/inativação.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Tenant, unicidade, filtros, autorização, status e IDs inteiros.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

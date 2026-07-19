@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 14 — Importações Industriais
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Adaptar a infraestrutura genérica de importação.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–13 conforme cada tipo.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Tipos para parceiros, materiais, pedreiras, localizações, blocos, chapas, lotes, abertura de estoque e custos.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Pipeline upload→mapping→validation→preview→processing→result; tipo não implementado é rejeitado; tenant, idempotência e erros por linha.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+Endpoints existentes adaptados por tipo, sem importadores financeiros.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Preview, erros, retry, duplicidade, arquivos inválidos, tenant e autorização.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

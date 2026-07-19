@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 11 — Rendimento e Perdas
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Calcular indicadores da transformação de bloco em chapas.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–10.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Volume, área bruta, área útil, rejeitos, quantidade, rendimento e perda por bloco, material e máquina.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Fórmulas documentadas; precisão e arredondamento centralizados; zero division seguro; snapshots quando necessário.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+Endpoints de cálculo, detalhe e agregações filtráveis.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Fórmulas, arredondamento, rejeitos, reprocessamento e tenant.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

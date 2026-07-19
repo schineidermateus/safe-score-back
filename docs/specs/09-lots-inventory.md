@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 09 — Lotes e Estoque
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Agrupar chapas e controlar estoque por movimentos imutáveis.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -18,19 +18,19 @@ Consolidar autenticação, usuários, organizações e memberships.
 - Não antecipar funcionalidades fora desta spec.
 
 ## Dependências
-Specs anteriores na ordem numérica.
+Specs 00–08.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Lot, LotItem e InventoryMovement com receipt, transfer, reservation, release, shipment, adjustment, disposal e movimentos de produção.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Uma chapa em no máximo um lote ativo; movimento não é editado, apenas compensado; ajuste exige capability; idempotência quando necessário.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+CRUD de lotes; composição; endpoints de movimentação e histórico.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Lotes, transferências, reservas, ajustes, tenant, idempotência e auditoria.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.

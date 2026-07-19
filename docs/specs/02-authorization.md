@@ -1,10 +1,10 @@
-# Backend Spec 01 — Identidade e Organizações
+# Backend Spec 02 — Roles e Capabilities
 
 ## Status
 Proposta para implementação incremental.
 
 ## Objetivo
-Consolidar autenticação, usuários, organizações e memberships.
+Definir autorização industrial baseada em capabilities.
 
 ## Regras globais
 - IDs inteiros numéricos; não usar UUID ou ULID.
@@ -21,16 +21,16 @@ Consolidar autenticação, usuários, organizações e memberships.
 Specs anteriores na ordem numérica.
 
 ## Escopo funcional
-Login, perfil, organizações acessíveis, seleção de organização atual, status de usuário e membership.
+Catálogo central, roles como agrupadores, voters/authorization service, perfis padrão e auditoria administrativa.
 
 ## Regras específicas
-Usuário bloqueado não autentica; membership inativa não concede acesso; organização atual nunca vem de payload de domínio.
+Código não verifica nomes de role; backend é autoridade; capability futura não cria endpoint inexistente.
 
 ## Contratos e operações
-POST /auth/login; GET /auth/me; GET /organizations; operação existente de troca de organização.
+Capabilities para parceiros, cadastros, blocos, ordens, chapas, lotes, estoque, rastreabilidade, rendimento, custos, pricing, imports e auditoria.
 
 ## Testes obrigatórios
-Login, logout, membership, troca de tenant, organização alheia e IDs numéricos.
+Acesso permitido/negado, tenant, alteração administrativa e ausência de role checks.
 
 ## Critérios de aceite
 - Implementação restrita ao escopo desta spec.
