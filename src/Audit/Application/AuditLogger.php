@@ -30,6 +30,7 @@ final readonly class AuditLogger
         ?array $after,
         ?array $metadata,
         \DateTimeImmutable $now,
+        ?string $correlationId = null,
     ): void {
         $this->repository->save(AuditLog::record(
             $organization,
@@ -41,6 +42,7 @@ final readonly class AuditLogger
             $after,
             $metadata,
             $now,
+            $correlationId,
         ));
     }
 }

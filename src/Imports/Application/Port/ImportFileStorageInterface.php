@@ -8,12 +8,12 @@ use App\Imports\Application\DTO\StoredImportFile;
 
 interface ImportFileStorageInterface
 {
-    public function store(string $temporaryPath, string $originalFileName): StoredImportFile;
+    public function store(int $organizationId, string $temporaryPath, string $originalFileName): StoredImportFile;
 
     /** @return resource */
-    public function open(string $storageKey);
+    public function open(int $organizationId, string $storageKey);
 
-    public function exists(string $storageKey): bool;
+    public function exists(int $organizationId, string $storageKey): bool;
 
-    public function remove(string $storageKey): void;
+    public function remove(int $organizationId, string $storageKey): void;
 }

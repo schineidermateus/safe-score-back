@@ -20,7 +20,7 @@ final class HealthCheckTest extends WebTestCase
             {
                 "data": {
                     "status": "ok",
-                    "service": "safe-score-back"
+                    "service": "stone-traceability-back"
                 },
                 "meta": {},
                 "errors": []

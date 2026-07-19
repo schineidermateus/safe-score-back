@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Organizations\Domain\Entity;
 
+use App\Authorization\Domain\Entity\Role;
 use App\Identity\Domain\Entity\User;
 use App\Organizations\Domain\Enum\MembershipRole;
 use App\Organizations\Domain\Enum\MembershipStatus;
 use App\Organizations\Infrastructure\Persistence\Doctrine\DoctrineOrganizationMembershipRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -37,6 +40,13 @@ class OrganizationMembership
     #[ORM\Column(type: Types::STRING, length: 20, enumType: MembershipStatus::class)]
     private MembershipStatus $status;
 
+    /** @var Collection<int, Role> */
+    #[ORM\ManyToMany(targetEntity: Role::class)]
+    #[ORM\JoinTable(name: 'membership_roles')]
+    #[ORM\JoinColumn(name: 'membership_id', referencedColumnName: 'id', onDelete: 'CASCADE', options: ['unsigned' => true])]
+    #[ORM\InverseJoinColumn(name: 'role_id', referencedColumnName: 'id', onDelete: 'CASCADE', options: ['unsigned' => true])]
+    private Collection $authorizationRoles;
+
     #[ORM\Column(name: 'joined_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $joinedAt;
 
@@ -49,6 +59,7 @@ class OrganizationMembership
     private function __construct(?int $id = null)
     {
         $this->id = $id;
+        $this->authorizationRoles = new ArrayCollection();
     }
 
     public static function join(
@@ -114,6 +125,24 @@ class OrganizationMembership
     public function grantsAccess(): bool
     {
         return MembershipStatus::Active === $this->status;
+    }
+
+    public function assignAuthorizationRole(Role $role): void
+    {
+        if (!$this->authorizationRoles->contains($role)) {
+            $this->authorizationRoles->add($role);
+        }
+    }
+
+    public function hasCapability(string $capability): bool
+    {
+        foreach ($this->authorizationRoles as $role) {
+            if ($role->hasCapability($capability)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function joinedAt(): \DateTimeImmutable

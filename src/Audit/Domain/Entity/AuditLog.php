@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Index(name: 'idx_audit_org_created', columns: ['organization_id', 'created_at'])]
 #[ORM\Index(name: 'idx_audit_org_entity', columns: ['organization_id', 'entity_type', 'entity_id'])]
 #[ORM\Index(name: 'idx_audit_user', columns: ['user_id'])]
+#[ORM\Index(name: 'idx_audit_correlation', columns: ['correlation_id'])]
 class AuditLog
 {
     #[ORM\Id]
@@ -52,6 +53,9 @@ class AuditLog
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $metadata;
 
+    #[ORM\Column(name: 'correlation_id', type: Types::STRING, length: 100, nullable: true)]
+    private ?string $correlationId;
+
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $createdAt;
 
@@ -75,6 +79,7 @@ class AuditLog
         ?array $afterData,
         ?array $metadata,
         \DateTimeImmutable $now,
+        ?string $correlationId = null,
     ): self {
         $log = new self();
         $log->organization = $organization;
@@ -85,6 +90,7 @@ class AuditLog
         $log->beforeData = $beforeData;
         $log->afterData = $afterData;
         $log->metadata = $metadata;
+        $log->correlationId = null === $correlationId || '' === trim($correlationId) ? null : trim($correlationId);
         $log->createdAt = $now;
 
         return $log;
@@ -141,5 +147,10 @@ class AuditLog
     public function createdAt(): \DateTimeImmutable
     {
         return $this->createdAt;
+    }
+
+    public function correlationId(): ?string
+    {
+        return $this->correlationId;
     }
 }

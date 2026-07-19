@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Organizations\Application\UseCase;
 
 use App\Authorization\Application\AuthorizationService;
+use App\Authorization\Domain\AuthorizationAction;
+use App\Authorization\Domain\Entity\Capability;
+use App\Authorization\Domain\Entity\Role;
 use App\Identity\Domain\Entity\User;
 use App\Organizations\Application\UseCase\ChangeMembershipRole;
 use App\Organizations\Application\UseCase\SuspendMembership;
@@ -30,6 +33,7 @@ final class OwnerProtectionTest extends TestCase
         EntityId::assign($currentUser, 1);
         EntityId::assign($targetUser, 2);
         $currentMembership = OrganizationMembership::join($organization, $currentUser, MembershipRole::Owner, $now);
+        $this->grantMembershipManagement($currentMembership);
         $targetMembership = OrganizationMembership::join($organization, $targetUser, MembershipRole::Owner, $now);
         $repository = new InMemoryMembershipRepository();
         $repository->save($currentMembership);
@@ -75,10 +79,20 @@ final class OwnerProtectionTest extends TestCase
         EntityId::assign($organization, 1);
         EntityId::assign($user, 1);
         $membership = OrganizationMembership::join($organization, $user, MembershipRole::Owner, $now);
+        $this->grantMembershipManagement($membership);
         $repository = new InMemoryMembershipRepository();
         $repository->save($membership);
         $context = new CurrentContextStub($user, $organization, $membership);
 
         return [$membership, $repository, $context];
+    }
+
+    private function grantMembershipManagement(OrganizationMembership $membership): void
+    {
+        $role = Role::create('TEST_ORG_MANAGER', 'Test organization manager');
+        foreach ([AuthorizationAction::ManageMembers, AuthorizationAction::AssignOwner] as $action) {
+            $role->grant(Capability::create($action->value, 'Test grant'));
+        }
+        $membership->assignAuthorizationRole($role);
     }
 }

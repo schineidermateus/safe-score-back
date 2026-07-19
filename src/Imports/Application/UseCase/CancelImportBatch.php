@@ -28,7 +28,7 @@ final readonly class CancelImportBatch
 
     public function execute(int $id): ImportBatchOutput
     {
-        $this->authorization->assertGranted(AuthorizationAction::ImportCancel);
+        $this->authorization->assertGranted(AuthorizationAction::ImportWrite);
         $organization = $this->currentOrganization->currentOrganization();
         $user = $this->currentUser->currentUser();
         $batch = $this->transactions->transactional(function () use ($organization, $user, $id) {

@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Tests\Organizations\Application\UseCase;
 
 use App\Authorization\Application\AuthorizationService;
+use App\Authorization\Domain\AuthorizationAction;
+use App\Authorization\Domain\Entity\Capability;
+use App\Authorization\Domain\Entity\Role;
 use App\Identity\Application\Context\CurrentUserProviderInterface;
 use App\Identity\Application\DTO\CreateUserInput;
 use App\Identity\Application\UseCase\CreateUser;
@@ -76,6 +79,11 @@ final class FoundationUseCasesTest extends TestCase
         EntityId::assign($target, 2);
 
         $ownerMembership = OrganizationMembership::join($organization, $owner, MembershipRole::Owner, $now);
+        $role = Role::create('TEST_ORG_MANAGER', 'Test organization manager');
+        foreach ([AuthorizationAction::ManageMembers, AuthorizationAction::AssignOwner] as $action) {
+            $role->grant(Capability::create($action->value, 'Test grant'));
+        }
+        $ownerMembership->assignAuthorizationRole($role);
         $duplicate = OrganizationMembership::join($organization, $target, MembershipRole::Viewer, $now);
         $memberships = new InMemoryMembershipRepository();
         $memberships->save($ownerMembership);

@@ -39,7 +39,7 @@ final readonly class ValidateImportBatch
 
     public function execute(int $id): ImportBatchOutput
     {
-        $this->authorization->assertGranted(AuthorizationAction::ImportValidate);
+        $this->authorization->assertGranted(AuthorizationAction::ImportWrite);
         $organization = $this->currentOrganization->currentOrganization();
         $user = $this->currentUser->currentUser();
         $batch = $this->transactions->transactional(function () use ($organization, $id) {
@@ -58,7 +58,7 @@ final readonly class ValidateImportBatch
         $total = $valid = $invalid = 0;
 
         try {
-            $stream = $this->storage->open($batch->storageKey());
+            $stream = $this->storage->open($organization->requireId(), $batch->storageKey());
             try {
                 $inspection = $this->csv->inspect($stream);
                 foreach ($this->csv->rows($stream, $inspection) as $csvRow) {

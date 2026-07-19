@@ -26,13 +26,17 @@ final readonly class CreateImportBatch
 
     public function execute(string $typeValue, string $temporaryPath, string $originalFileName): ImportBatchOutput
     {
-        $this->authorization->assertGranted(AuthorizationAction::ImportCreate);
+        $this->authorization->assertGranted(AuthorizationAction::ImportWrite);
         $type = ImportType::tryFrom(strtoupper($typeValue)) ?? throw new DomainException('IMPORT_INVALID_TYPE', 'Tipo de importação inválido.', 422, 'type');
+        if (!$type->implemented()) {
+            throw new DomainException('IMPORT_TYPE_NOT_IMPLEMENTED', sprintf('Import type %s is not implemented yet.', $type->value), 422, 'type');
+        }
         $organization = $this->currentOrganization->currentOrganization();
         $user = $this->currentUser->currentUser();
-        $stored = $this->storage->store($temporaryPath, $originalFileName);
+        $organizationId = $organization->requireId();
+        $stored = $this->storage->store($organizationId, $temporaryPath, $originalFileName);
         try {
-            $stream = $this->storage->open($stored->storageKey);
+            $stream = $this->storage->open($organizationId, $stored->storageKey);
             try {
                 $inspection = $this->csv->inspect($stream);
             } finally {
@@ -56,7 +60,7 @@ final readonly class CreateImportBatch
 
             return ImportBatchOutput::fromEntity($batch);
         } catch (\Throwable $exception) {
-            $this->storage->remove($stored->storageKey);
+            $this->storage->remove($organizationId, $stored->storageKey);
             throw $exception;
         }
     }

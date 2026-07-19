@@ -32,7 +32,7 @@ final readonly class ProcessImportBatch
 
     public function execute(int $id): ImportBatchOutput
     {
-        $this->authorization->assertGranted(AuthorizationAction::ImportProcess);
+        $this->authorization->assertGranted(AuthorizationAction::ImportWrite);
         $organization = $this->currentOrganization->currentOrganization();
         $user = $this->currentUser->currentUser();
         $batch = $this->transactions->transactional(function () use ($organization, $id) {

@@ -33,7 +33,7 @@ final readonly class SetImportMapping
     /** @param array<string, string> $mapping */
     public function execute(int $id, array $mapping): ImportBatchOutput
     {
-        $this->authorization->assertGranted(AuthorizationAction::ImportValidate);
+        $this->authorization->assertGranted(AuthorizationAction::ImportWrite);
         $organization = $this->currentOrganization->currentOrganization();
         $user = $this->currentUser->currentUser();
         $batch = $this->transactions->transactional(function () use ($organization, $user, $id, $mapping) {

@@ -17,18 +17,6 @@ services:
         alias: App\Organizations\Infrastructure\Persistence\Doctrine\DoctrineOrganizationRepository
     App\Organizations\Domain\Repository\OrganizationMembershipRepository:
         alias: App\Organizations\Infrastructure\Persistence\Doctrine\DoctrineOrganizationMembershipRepository
-    App\Customers\Domain\Repository\CustomerRepository:
-        alias: App\Customers\Infrastructure\Persistence\Doctrine\DoctrineCustomerRepository
-    App\Credit\Domain\Repository\CreditLimitRepository:
-        alias: App\Credit\Infrastructure\Persistence\Doctrine\DoctrineCreditLimitRepository
-    App\Credit\Domain\Service\ActiveCreditLimitResolverInterface:
-        alias: App\Credit\Application\Service\ActiveCreditLimitResolver
-    App\Receivables\Domain\Repository\ReceivableRepository:
-        alias: App\Receivables\Infrastructure\Persistence\Doctrine\DoctrineReceivableRepository
-    App\Receivables\Domain\Repository\ReceivablePaymentRepository:
-        alias: App\Receivables\Infrastructure\Persistence\Doctrine\DoctrineReceivablePaymentRepository
-    App\Receivables\Domain\Service\ReceivableStatusResolverInterface:
-        alias: App\Receivables\Application\Service\ReceivableStatusResolver
     App\Audit\Domain\Repository\AuditLogRepository:
         alias: App\Audit\Infrastructure\Persistence\Doctrine\DoctrineAuditLogRepository
     App\Shared\Application\Transaction\TransactionManagerInterface:
@@ -37,8 +25,6 @@ services:
         alias: App\Imports\Infrastructure\Persistence\Doctrine\DoctrineImportBatchRepository
     App\Imports\Domain\Repository\ImportRowRepository:
         alias: App\Imports\Infrastructure\Persistence\Doctrine\DoctrineImportRowRepository
-    App\Reporting\Domain\Repository\FinancialIndicatorsQueryInterface:
-        alias: App\Reporting\Infrastructure\Persistence\Doctrine\DoctrineFinancialIndicatorsQuery
     App\Imports\Application\Port\ImportFileStorageInterface:
         alias: App\Imports\Infrastructure\Storage\LocalImportFileStorage
     App\Imports\Application\Port\CsvReaderInterface:
@@ -48,27 +34,7 @@ services:
         arguments:
             $baseDirectory: '%app.import_storage_directory%'
 
-    App\Customers\Infrastructure\OpenApi\CustomerOpenApiFactory:
-        decorates: 'api_platform.openapi.factory'
-        arguments:
-            $decorated: '@.inner'
-
-    App\Credit\Infrastructure\OpenApi\CreditLimitOpenApiFactory:
-        decorates: 'api_platform.openapi.factory'
-        arguments:
-            $decorated: '@.inner'
-
-    App\Receivables\Infrastructure\OpenApi\ReceivableOpenApiFactory:
-        decorates: 'api_platform.openapi.factory'
-        arguments:
-            $decorated: '@.inner'
-
     App\Imports\Infrastructure\OpenApi\ImportOpenApiFactory:
-        decorates: 'api_platform.openapi.factory'
-        arguments:
-            $decorated: '@.inner'
-
-    App\Reporting\Infrastructure\OpenApi\FinancialIndicatorsOpenApiFactory:
         decorates: 'api_platform.openapi.factory'
         arguments:
             $decorated: '@.inner'

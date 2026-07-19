@@ -14,16 +14,12 @@ final class ImportSchemaRegistry
 
     public function __construct()
     {
-        $this->schemas = [
-            ImportType::Customers->value => new ImportSchema(ImportType::Customers, ['external_id', 'legal_name', 'trade_name', 'document', 'status'], ['legal_name'], [['external_id', 'document']]),
-            ImportType::CreditLimits->value => new ImportSchema(ImportType::CreditLimits, ['customer_external_id', 'customer_document', 'amount', 'valid_from', 'valid_until', 'status', 'reason'], ['amount', 'valid_from', 'reason'], [['customer_external_id', 'customer_document']]),
-            ImportType::Receivables->value => new ImportSchema(ImportType::Receivables, ['customer_external_id', 'customer_document', 'source', 'external_id', 'document_number', 'issue_date', 'due_date', 'original_amount', 'open_amount', 'paid_amount', 'payment_date', 'status'], ['source', 'external_id', 'document_number', 'issue_date', 'due_date', 'original_amount'], [['customer_external_id', 'customer_document']]),
-        ];
+        $this->schemas = [];
     }
 
     public function get(ImportType $type): ImportSchema
     {
-        return $this->schemas[$type->value];
+        return $this->schemas[$type->value] ?? throw new DomainException('IMPORT_TYPE_NOT_IMPLEMENTED', sprintf('O tipo %s ainda nÃ£o possui importer implementado.', $type->value), 422, 'type');
     }
 
     /**

@@ -14,7 +14,7 @@ final readonly class LocalImportFileStorage implements ImportFileStorageInterfac
     {
     }
 
-    public function store(string $temporaryPath, string $originalFileName): StoredImportFile
+    public function store(int $organizationId, string $temporaryPath, string $originalFileName): StoredImportFile
     {
         if (!is_file($temporaryPath) || !is_readable($temporaryPath)) {
             throw new DomainException('IMPORT_INVALID_FILE', 'Arquivo de importação inválido.', 422, 'file');
@@ -38,8 +38,8 @@ final readonly class LocalImportFileStorage implements ImportFileStorageInterfac
         }
         $original = $this->sanitizeOriginalName($originalFileName);
         $key = bin2hex(random_bytes(24)).'.csv';
-        $this->ensureDirectory();
-        $destination = $this->path($key);
+        $this->ensureDirectory($organizationId);
+        $destination = $this->path($organizationId, $key);
         if (!copy($temporaryPath, $destination)) {
             @unlink($destination);
             throw new DomainException('IMPORT_STORAGE_FAILED', 'Não foi possível armazenar o arquivo.', 500);
@@ -54,9 +54,9 @@ final readonly class LocalImportFileStorage implements ImportFileStorageInterfac
         return new StoredImportFile($key, $original, $key, $hash, $size);
     }
 
-    public function open(string $storageKey)
+    public function open(int $organizationId, string $storageKey)
     {
-        $path = $this->path($this->safeKey($storageKey));
+        $path = $this->path($organizationId, $this->safeKey($storageKey));
         $stream = @fopen($path, 'r');
         if (false === $stream) {
             throw new DomainException('IMPORT_FILE_NOT_FOUND', 'Arquivo de importação não encontrado.', 404);
@@ -65,14 +65,14 @@ final readonly class LocalImportFileStorage implements ImportFileStorageInterfac
         return $stream;
     }
 
-    public function exists(string $storageKey): bool
+    public function exists(int $organizationId, string $storageKey): bool
     {
-        return is_file($this->path($this->safeKey($storageKey)));
+        return is_file($this->path($organizationId, $this->safeKey($storageKey)));
     }
 
-    public function remove(string $storageKey): void
+    public function remove(int $organizationId, string $storageKey): void
     {
-        $path = $this->path($this->safeKey($storageKey));
+        $path = $this->path($organizationId, $this->safeKey($storageKey));
         if (is_file($path) && !@unlink($path)) {
             throw new DomainException('IMPORT_STORAGE_FAILED', 'Não foi possível remover o arquivo.', 500);
         }
@@ -87,17 +87,22 @@ final readonly class LocalImportFileStorage implements ImportFileStorageInterfac
         return $key;
     }
 
-    private function path(string $key): string
+    private function path(int $organizationId, string $key): string
     {
-        return rtrim($this->baseDirectory, '\\/').\DIRECTORY_SEPARATOR.$key;
+        if ($organizationId < 1) {
+            throw new DomainException('IMPORT_INVALID_TENANT', 'Organização inválida para armazenamento.', 422);
+        }
+
+        return rtrim($this->baseDirectory, '\\/').\DIRECTORY_SEPARATOR.$organizationId.\DIRECTORY_SEPARATOR.$key;
     }
 
-    private function ensureDirectory(): void
+    private function ensureDirectory(int $organizationId): void
     {
-        if (!is_dir($this->baseDirectory) && !mkdir($this->baseDirectory, 0700, true) && !is_dir($this->baseDirectory)) {
+        $directory = rtrim($this->baseDirectory, '\\/').\DIRECTORY_SEPARATOR.$organizationId;
+        if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
             throw new DomainException('IMPORT_STORAGE_FAILED', 'Diretório de importação indisponível.', 500);
         }
-        if (!is_writable($this->baseDirectory)) {
+        if (!is_writable($directory)) {
             throw new DomainException('IMPORT_STORAGE_FAILED', 'Diretório de importação sem permissão de escrita.', 500);
         }
     }

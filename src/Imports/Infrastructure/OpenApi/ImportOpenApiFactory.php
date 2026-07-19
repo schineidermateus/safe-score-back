@@ -26,7 +26,7 @@ final readonly class ImportOpenApiFactory implements OpenApiFactoryInterface
         $paths = $openApi->getPaths();
         $paths->addPath('/api/v1/imports', new PathItem(
             get: new Operation(operationId: 'imports_list', tags: ['Imports'], responses: $this->responses('Lotes paginados.'), summary: 'Lista lotes do tenant', parameters: $this->pagination()),
-            post: new Operation(operationId: 'imports_create', tags: ['Imports'], responses: $this->responses('Lote criado.', 201), summary: 'Faz upload de CSV', requestBody: new RequestBody(content: new \ArrayObject(['multipart/form-data' => new MediaType(new \ArrayObject(['type' => 'object', 'required' => ['type', 'file'], 'properties' => ['type' => ['type' => 'string', 'enum' => ['CUSTOMERS', 'CREDIT_LIMITS', 'RECEIVABLES']], 'file' => ['type' => 'string', 'format' => 'binary']]]))]), required: true)),
+            post: new Operation(operationId: 'imports_create', tags: ['Imports'], responses: $this->responses('Lote criado.', 201), summary: 'Faz upload de CSV', description: 'Os tipos industriais são reservados e retornam IMPORT_TYPE_NOT_IMPLEMENTED até a respectiva spec.', requestBody: new RequestBody(content: new \ArrayObject(['multipart/form-data' => new MediaType(new \ArrayObject(['type' => 'object', 'required' => ['type', 'file'], 'properties' => ['type' => ['type' => 'string', 'enum' => ['BUSINESS_PARTNERS', 'MATERIALS', 'QUARRIES', 'STORAGE_LOCATIONS', 'BLOCKS', 'SLABS', 'LOTS', 'INVENTORY_OPENING', 'PRODUCTION_COSTS']], 'file' => ['type' => 'string', 'format' => 'binary']]]))]), required: true)),
         ));
         $paths->addPath('/api/v1/imports/{id}', new PathItem(get: new Operation(operationId: 'imports_get', tags: ['Imports'], responses: $this->responses('Lote.'), summary: 'Consulta lote'), parameters: $this->id()));
         $mapping = ['type' => 'object', 'required' => ['mapping'], 'additionalProperties' => false, 'properties' => ['mapping' => ['type' => 'object', 'additionalProperties' => ['type' => 'string']]]];
@@ -73,7 +73,7 @@ final readonly class ImportOpenApiFactory implements OpenApiFactoryInterface
     private function envelopeSchema(): array
     {
         $batch = ['type' => 'object', 'required' => ['id', 'type', 'status', 'file_name', 'file_hash', 'total_rows', 'valid_rows', 'success_rows', 'error_rows', 'skipped_rows'], 'properties' => [
-            'id' => ['type' => 'integer', 'format' => 'int32'], 'type' => ['type' => 'string', 'enum' => ['CUSTOMERS', 'CREDIT_LIMITS', 'RECEIVABLES']], 'status' => ['type' => 'string'],
+            'id' => ['type' => 'integer', 'format' => 'int32'], 'type' => ['type' => 'string', 'enum' => ['BUSINESS_PARTNERS', 'MATERIALS', 'QUARRIES', 'STORAGE_LOCATIONS', 'BLOCKS', 'SLABS', 'LOTS', 'INVENTORY_OPENING', 'PRODUCTION_COSTS']], 'status' => ['type' => 'string'],
             'file_name' => ['type' => 'string'], 'original_file_name' => ['type' => 'string'], 'file_hash' => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'], 'file_size' => ['type' => 'integer'],
             'headers' => ['type' => 'array', 'items' => ['type' => 'string']], 'mapping' => ['type' => ['object', 'null'], 'additionalProperties' => ['type' => 'string']], 'encoding' => ['type' => 'string'], 'delimiter' => ['type' => 'string'],
             'total_rows' => ['type' => 'integer'], 'valid_rows' => ['type' => 'integer'], 'success_rows' => ['type' => 'integer'], 'error_rows' => ['type' => 'integer'], 'skipped_rows' => ['type' => 'integer'], 'failure_code' => ['type' => ['string', 'null']],

@@ -12,7 +12,7 @@ final class HealthCheckController
     {
         return ApiResponseFactory::success([
             'status' => 'ok',
-            'service' => 'safe-score-back',
+            'service' => 'stone-traceability-back',
         ]);
     }
 }

@@ -12,7 +12,7 @@ final class NativeCsvReaderTest extends TestCase
 {
     public function testReadsCommaCsvWithLineNumbers(): void
     {
-        $stream = fopen(__DIR__.'/../Fixtures/customers-valid.csv', 'r');
+        $stream = fopen(__DIR__.'/../Fixtures/values-iso.csv', 'r');
         self::assertIsResource($stream);
         $reader = new NativeCsvReader();
         $inspection = $reader->inspect($stream);
@@ -20,12 +20,12 @@ final class NativeCsvReaderTest extends TestCase
         fclose($stream);
         self::assertSame(',', $inspection->delimiter);
         self::assertSame(2, $rows[0]->number);
-        self::assertSame('Cliente Exemplo', $rows[0]->data['legal_name']);
+        self::assertSame('MAT-001', $rows[0]->data['code']);
     }
 
     public function testReadsSemicolonAndPtBr(): void
     {
-        $stream = fopen(__DIR__.'/../Fixtures/credit-limits-valid.csv', 'r');
+        $stream = fopen(__DIR__.'/../Fixtures/values-pt-br.csv', 'r');
         self::assertIsResource($stream);
         $reader = new NativeCsvReader();
         $inspection = $reader->inspect($stream);

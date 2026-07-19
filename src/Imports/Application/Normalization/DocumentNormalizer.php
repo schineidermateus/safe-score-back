@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Imports\Application\Normalization;
 
-use App\Customers\Application\UseCase\CustomerDocument;
-
 final class DocumentNormalizer
 {
     public function optional(mixed $value): ?string
     {
-        return CustomerDocument::normalize(null === $value ? null : (string) $value);
+        if (null === $value || '' === trim((string) $value)) {
+            return null;
+        }
+
+        $normalized = preg_replace('/\D/', '', (string) $value) ?? '';
+
+        return '' === $normalized ? null : $normalized;
     }
 
     public function required(mixed $value): string

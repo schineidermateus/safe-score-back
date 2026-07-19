@@ -20,7 +20,7 @@ final readonly class AuthorizationService
     {
         $membership = $this->memberships->currentMembership();
 
-        if (!$membership->grantsAccess() || !in_array($action, $this->actionsFor($membership->role()), true)) {
+        if (!$membership->grantsAccess() || !$membership->hasCapability($action->value)) {
             throw new DomainException('ACCESS_DENIED', 'Acesso negado.', 403);
         }
     }
@@ -29,53 +29,7 @@ final readonly class AuthorizationService
         OrganizationMembership $target,
         ?MembershipRole $newRole = null,
     ): void {
-        $current = $this->memberships->currentMembership();
-        $this->assertGranted(AuthorizationAction::ManageMembers);
-
-        if (
-            MembershipRole::Admin === $current->role()
-            && (MembershipRole::Owner === $target->role() || MembershipRole::Owner === $newRole)
-        ) {
-            throw new DomainException('OWNER_MANAGEMENT_FORBIDDEN', 'Somente OWNER pode gerenciar outro OWNER.', 403);
-        }
-    }
-
-    /** @return list<AuthorizationAction> */
-    private function actionsFor(MembershipRole $role): array
-    {
-        $operational = [
-            AuthorizationAction::ViewData,
-            AuthorizationAction::ManageCustomers,
-            AuthorizationAction::CreditLimitRead,
-            AuthorizationAction::CreditLimitWrite,
-            AuthorizationAction::ReceivableRead,
-            AuthorizationAction::ReceivableWrite,
-            AuthorizationAction::ReceivablePaymentRegister,
-            AuthorizationAction::ReceivableCancel,
-            AuthorizationAction::ImportRead,
-            AuthorizationAction::ImportCreate,
-            AuthorizationAction::ImportValidate,
-            AuthorizationAction::ImportProcess,
-            AuthorizationAction::ImportCancel,
-            AuthorizationAction::FinancialIndicatorsRead,
-            AuthorizationAction::ResolveAlerts,
-            AuthorizationAction::RecalculateScore,
-        ];
-
-        return match ($role) {
-            MembershipRole::Owner => [...AuthorizationAction::cases()],
-            MembershipRole::Admin => [
-                ...$operational,
-                AuthorizationAction::CreditLimitRevoke,
-                AuthorizationAction::ManageMembers,
-            ],
-            MembershipRole::Analyst => $operational,
-            MembershipRole::Viewer => [
-                AuthorizationAction::ViewData,
-                AuthorizationAction::CreditLimitRead,
-                AuthorizationAction::ReceivableRead,
-                AuthorizationAction::FinancialIndicatorsRead,
-            ],
-        };
+        $requiresOwnerAssignment = MembershipRole::Owner === $target->role() || MembershipRole::Owner === $newRole;
+        $this->assertGranted($requiresOwnerAssignment ? AuthorizationAction::AssignOwner : AuthorizationAction::ManageMembers);
     }
 }

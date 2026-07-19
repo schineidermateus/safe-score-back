@@ -1,5 +1,5 @@
 framework:
     cache:
-        prefix_seed: safe_score
+        prefix_seed: stone_traceability
         app: cache.adapter.filesystem
         system: cache.adapter.system

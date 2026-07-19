@@ -1,6 +1,6 @@
 security:
     providers:
-        safe_score_users:
+        platform_users:
             entity:
                 class: App\Identity\Domain\Entity\User
                 property: email
@@ -13,7 +13,7 @@ security:
             pattern: ^/api
             stateless: true
             lazy: true
-            provider: safe_score_users
+            provider: platform_users
             user_checker: App\Identity\Infrastructure\Security\ProductionUserChecker
             entry_point: App\Identity\Infrastructure\Security\ApiAuthenticationEntryPoint
 

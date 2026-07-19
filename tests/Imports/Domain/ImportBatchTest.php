@@ -90,7 +90,7 @@ final class ImportBatchTest extends TestCase
         $user = User::create('User', 'imports@example.com', $now);
         EntityId::assign($organization, 1);
         EntityId::assign($user, 1);
-        $batch = ImportBatch::create($organization, $user, ImportType::Customers, 'internal.csv', 'original.csv', str_repeat('a', 48).'.csv', str_repeat('b', 64), 10, ['Nome', 'Documento'], 'UTF-8', ',', $now);
+        $batch = ImportBatch::create($organization, $user, ImportType::BusinessPartners, 'internal.csv', 'original.csv', str_repeat('a', 48).'.csv', str_repeat('b', 64), 10, ['Nome', 'Documento'], 'UTF-8', ',', $now);
         EntityId::assign($batch, 1);
 
         return $batch;

@@ -1,6 +1,8 @@
-# SafeScore Backend
+# Stone Traceability Backend
 
-Backend do SafeScore desenvolvido em Symfony, Doctrine ORM e MySQL. O ambiente local integrado é fornecido pelo repositório irmão `../safe-score-infra`.
+Backend multi-tenant para a fundação de rastreabilidade de rochas ornamentais, desenvolvido em Symfony, Doctrine ORM e MySQL.
+
+O produto usa uma baseline nova e não suporta a sequência de migrations do SafeScore. Todos os identificadores persistidos são inteiros gerados pelo banco. A fundação atual contém identidade, organizações, autorização por capabilities, imports genéricos, auditoria e cadastros industriais iniciais.
 
 ## Preparação do ambiente
 
@@ -33,8 +35,7 @@ make migrate
 
 Com a infraestrutura local em execução, a documentação OpenAPI pode ser visualizada pela interface Swagger UI:
 
-- API direta: <http://api.safescore.local/api/docs>
-- Pelo host da aplicação: <http://app.safescore.local/api/docs>
+- Ambiente local: <http://localhost:8000/api/docs>
 
 Para que esses endereços sejam resolvidos localmente, adicione as entradas abaixo ao arquivo `hosts` do sistema operacional:
 
@@ -58,7 +59,7 @@ Testes e qualidade:
 
 ```bash
 make test
-make test-file file="tests/Customers/Application/UseCase/CustomerUseCasesTest.php"
+make test-file file="tests/Industrial/Domain/IndustrialFoundationTest.php"
 make phpstan
 make cs-check
 make quality
